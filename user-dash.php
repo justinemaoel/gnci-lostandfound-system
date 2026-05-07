@@ -82,7 +82,7 @@ $item_count = count($items);
                             </a>
                         </li>
                         <li class="nav-item mb-2">
-                            <a href="#" class="nav-link text-dark d-flex align-items-center">
+                            <a href="browse-item.php" class="nav-link text-dark d-flex align-items-center">
                                 <i class="bi bi-search me-2"></i> Browse Item
                             </a>
                         </li>
@@ -583,7 +583,7 @@ $item_count = count($items);
                     statusBox.className = 'alert alert-danger d-flex align-items-start gap-2 border-0 rounded-3';
                     statusText.innerHTML = `
                         <div class="fw-bold mb-1">Someone is looking for this item</div>
-                        <div>If you have found this item, please contact the owner using the information provided.</div>
+                        <div class="fw-light">If you have found this item, please contact the owner using the information provided.</div>
                     `;
                 } else {
                     typeBadge.textContent = 'Found';
@@ -591,7 +591,7 @@ $item_count = count($items);
                     statusBox.className = 'alert alert-success d-flex align-items-start gap-2 border-0 rounded-3';
                     statusText.innerHTML = `
                         <div class="fw-bold mb-1 text-dark">Surrendered to Lost & Found Office</div>
-                        <p class="mb-2">This item has been turned over to the GNC Lost & Found Management Office. Please visit the office during business hours to claim your item.</p>
+                        <p class="fw-light mb-2">This item has been turned over to the GNC Lost & Found Management Office. Please visit the office during business hours to claim your item.</p>
                         <div class="small">
                             <strong>Office Hours:</strong> Monday - Saturday, 8:00 AM - 5:00 PM<br>
                             <strong>Location:</strong> Main Building, Ground Floor
