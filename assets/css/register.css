@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Allison&family=Bebas+Neue&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Passion+One:wght@400;700;900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+
+body, html {
+    height: 100%;
+    margin: 0;
+    background-color: #094624;
+    font-family: 'Poppins', sans-serif;
+}
+
+.register-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Base Mobile Styles */
+.register-content {
+    width: 100%;
+    max-width: 450px;
+    text-align: left;
+}
+
+.brand-title { 
+    color: #DBFEB8; 
+    font-weight: 800; 
+    font-size: 2.2rem; 
+    line-height: 1.1; 
+    margin: 0; 
+    text-align: center;
+}
+.brand-title.highlight {
+    color: white;
+}
+.register-subtitle {
+    color: white;
+    text-align: left;
+    font-weight: 700;
+    margin-top: 30px;
+    margin-bottom: 20px;
+}
+
+.custom-input { 
+    background-color: transparent !important; 
+    border: 1px solid rgba(255, 255, 255, 0.5) !important; 
+    color: white !important; 
+    border-radius: 8px; 
+    padding: 10px; 
+}
+.custom-input::placeholder {
+    color: rgba(255,255,255,0.6);
+}
+.custom-input:focus {
+    border-color: #DBFEB8 !important;
+    box-shadow: none;
+}
+
+.btn{
+    font-family: 'Poppins', sans-serif;
+    font-weight: bold;
+    color: #094624;
+
+}
+
+.login-text {
+    color: white;
+    font-size: 0.9rem;
+}
+
+.login-link {
+    color: white;
+    text-decoration: underline;
+}
+
+/* Change the background of the dropdown list */
+select.custom-input {
+    background-color: #094624 !important;
+    color: white !important;
+}
+
+select.custom-input option {
+    background-color: #094624; 
+    color: white;
+    padding: 10px;
+}
+
