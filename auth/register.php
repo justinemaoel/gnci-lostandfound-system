@@ -1,21 +1,38 @@
 <?php
-require '../includes/db.php';
+require '../includes/db.php'; // This file defines $pdo
 $message = "";
+$messageClass = "alert-danger"; // Added to fix the undefined variable in your HTML
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
+
     if (strlen($password) < 8) {
         $message = "Password must be at least 8 characters.";
+    } elseif ($password !== $confirm_password) {
+        $message = "Passwords do not match.";
     } else {
         $hashed = password_hash($password, PASSWORD_DEFAULT);
         $role_map = [1 => 'student', 2 => 'faculty', 3 => 'staff'];
-        $role = $role_map[$_POST['account_type']];
+        $role = $role_map[$_POST['account_type']] ?? 'student';
 
-        $stmt = $conn->prepare("INSERT INTO users (first_name, last_name, email, password, role) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssss", $_POST['first_name'], $_POST['last_name'], $_POST['email'], $hashed, $role);
-        
-        if ($stmt->execute()) { $message = "Success! <a href='login.php'>Login</a>"; }
-        else { $message = "Email already exists."; }
+        try {
+            // Use $pdo instead of $conn
+            $stmt = $pdo->prepare("INSERT INTO users (first_name, last_name, email, password, role) VALUES (?, ?, ?, ?, ?)");
+            
+            // PDO executes by passing an array to execute() instead of using bind_param
+            if ($stmt->execute([$_POST['first_name'], $_POST['last_name'], $_POST['email'], $hashed, $role])) {
+                $message = "Success! <a href='login.php' class='alert-link'>Login here</a>";
+                $messageClass = "alert-success";
+            }
+        } catch (PDOException $e) {
+            // Error code 23000 usually means a duplicate email entry
+            if ($e->getCode() == 23000) {
+                $message = "Email already exists.";
+            } else {
+                $message = "An error occurred. Please try again.";
+            }
+        }
     }
 }
 ?>
