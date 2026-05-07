@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 26, 2026 at 11:52 AM
+-- Generation Time: May 07, 2026 at 07:18 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -62,10 +62,11 @@ CREATE TABLE `items` (
   `item_img` varchar(255) DEFAULT NULL,
   `time_last_seen` time DEFAULT NULL,
   `status` varchar(50) NOT NULL DEFAULT 'available',
-  `post_type` enum('i found something','i lost something') NOT NULL,
+  `post_type` enum('Lost','Found') NOT NULL,
   `upload_status` enum('approved','pending','rejected') DEFAULT 'pending',
   `item_resolved_status` enum('resolved','not resolved') DEFAULT 'not resolved',
   `contact_email` varchar(150) DEFAULT NULL,
+  `contact_phone` varchar(50) NOT NULL,
   `contact_num` varchar(20) DEFAULT NULL,
   `date_reported` date NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
@@ -75,8 +76,8 @@ CREATE TABLE `items` (
 -- Dumping data for table `items`
 --
 
-INSERT INTO `items` (`id`, `user_id`, `category_id`, `item_name`, `location_text`, `description`, `notes`, `item_img`, `time_last_seen`, `status`, `post_type`, `upload_status`, `item_resolved_status`, `contact_email`, `contact_num`, `date_reported`, `created_at`) VALUES
-(1, 2, 4, 'Blue Umbrella', 'test', 'test', 'test', '1777196542_Image.png', '17:45:00', 'available', '', 'pending', 'not resolved', 'test@gmail.com', '12345', '2026-04-08', '2026-04-26 09:42:22');
+INSERT INTO `items` (`id`, `user_id`, `category_id`, `item_name`, `location_text`, `description`, `notes`, `item_img`, `time_last_seen`, `status`, `post_type`, `upload_status`, `item_resolved_status`, `contact_email`, `contact_phone`, `contact_num`, `date_reported`, `created_at`) VALUES
+(14, 2, 1, 'test', 'test', 'test', 'test', '1778130405_Image.png', '13:08:00', 'available', 'Found', 'approved', 'not resolved', '', '', '', '2026-05-27', '2026-05-07 05:06:45');
 
 -- --------------------------------------------------------
 
@@ -89,7 +90,7 @@ CREATE TABLE `users` (
   `first_name` varchar(100) NOT NULL,
   `last_name` varchar(100) NOT NULL,
   `email` varchar(150) NOT NULL,
-  `password` varchar(255) NOT NULL,
+  `password` varchar(255) DEFAULT NULL,
   `role` enum('student','faculty','staff','admin') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -98,8 +99,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `first_name`, `last_name`, `email`, `password`, `role`) VALUES
-(1, 'System', 'Admin', 'admin@gmail.com', '$2y$10$7zR68n6w7fFvG.r9kZ9k7uGv.Wv6U9u1mB0z9z9z9z9z9z9z9z9z', 'admin'),
-(2, 'Justine Maoel', 'Figura', 'maoeljustine@gmail.com', '$2y$10$kndavFWGiSufzUvndtDX0.IOoqbtg7gfoG/7wxMXdzfCL1rewPKJm', 'student');
+(2, 'Justine Maoel', 'Figura', 'maoeljustine@gmail.com', '$2y$10$kndavFWGiSufzUvndtDX0.IOoqbtg7gfoG/7wxMXdzfCL1rewPKJm', 'student'),
+(7, 'GNC', 'Admin', 'admin.lostandfound@gmail.com', '$2y$10$ySRjo/DmQeL7SCW3fP7upuxcbXNpx.UXB03FXNvbUMNA19E23De.y', 'admin');
 
 --
 -- Indexes for dumped tables
@@ -139,13 +140,13 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT for table `items`
 --
 ALTER TABLE `items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Constraints for dumped tables
