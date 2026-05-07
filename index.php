@@ -32,7 +32,7 @@ $conn->close();
     <link rel="stylesheet" href="assets/css/index.css">
 </head>
 <body>
-
+    <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg shadow-sm">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="#">
@@ -63,6 +63,7 @@ $conn->close();
         </div>
     </nav>
 
+    <!-- LANDING PAGE -->
     <section class="hero-section vh-100 d-flex align-items-center text-white" 
             style="background: url('assets/images/gnc-landing-page-desktop.png') no-repeat center center; background-size: cover;">
         
@@ -88,6 +89,8 @@ $conn->close();
         </div>
     </section>
 
+
+    <!-- MISSION STATEMENT -->
     <section class="mission-section py-5 my-5">
         <div class="container text-center">
             <div class="row justify-content-center">
@@ -121,6 +124,7 @@ $conn->close();
         </div>
     </section>
 
+    <!-- RECENTLY FOUND ITEMS -->
     <section id="items" class="py-5">
         <div class="container py-4">
             <div class="text-center mb-5">
@@ -193,8 +197,49 @@ $conn->close();
         </div>
     </section>
 
+    <!-- FOOTER -->
+    <footer class="mt-auto py-5" style="background-color: #06331a; color: #ffffff; font-family: sans-serif;">
+        <div class="container-fluid px-5">
+            
+            <div class="mb-5">
+                <h2 class="fw-bold mb-0" style="font-size: 1.75rem;">About Us</h2>
+                <hr style="border-top: 1px solid rgba(255,255,255,0.3); opacity: 1; margin-top: 15px; margin-bottom: 20px;">
+                <p style="font-size: 0.95rem; line-height: 1.6;">
+                    The <strong>GNC Lost & Found System</strong> is a dedicated platform designed to simplify how our campus handles misplaced belongings. Our goal is to foster a community of honesty and efficiency by providing students and staff with a fast, photo-based way to report lost items and browse recovered property.
+                </p>
+                <p style="font-size: 0.95rem; line-height: 1.6;">
+                    Whether you've lost a textbook, a wallet, or your school ID, this system serves as the primary bridge to reconnect you with your essentials. By centralizing all reports in one dashboard, we make the recovery process faster for everyone at Guagua National Colleges.
+                </p>
+            </div>
 
+            <div class="mb-5">
+                <h2 class="fw-bold mb-0" style="font-size: 1.75rem;">Found an item? But want to stay anonymous?</h2>
+                <hr style="border-top: 1px solid rgba(255,255,255,0.3); opacity: 1; margin-top: 15px; margin-bottom: 20px;">
+                <p style="font-size: 0.95rem; line-height: 1.6;">
+                    If you have found a lost item and are unable to post it yourself, please surrender the item to the <strong>GNC Guard House</strong> or the <strong>Security Office</strong>. Our staff will secure the item and post the details on this system so the rightful owner can find it.
+                </p>
+            </div>
 
+            <div class="mb-5">
+                <h2 class="fw-bold mb-0" style="font-size: 1.75rem;">Contact Info</h2>
+                <hr style="border-top: 1px solid rgba(255,255,255,0.3); opacity: 1; margin-top: 15px; margin-bottom: 30px;">
+                
+                <div class="row align-items-center">
+                    <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
+                        <i class="bi bi-envelope me-3" style="font-size: 1.4rem;"></i>
+                        <span style="font-size: 0.95rem;">nangit.trishia@gmail.com</span>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
+                        <i class="bi bi-chat-square-dots me-3" style="font-size: 1.4rem;"></i>
+                        <span style="font-size: 0.95rem;">09+ *** *** ****</span>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-center">
+                        <i class="bi bi-geo-alt me-3" style="font-size: 1.4rem;"></i>
+                        <span style="font-size: 0.95rem;">Guagua, Pampanga, Philippines</span>
+                    </div>
+                </div>
+            </div>
+    </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
