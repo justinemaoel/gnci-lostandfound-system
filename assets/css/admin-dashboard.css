@@ -1,5 +1,22 @@
+body { background-color: #f8f9fa; }
 .user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
 .active-filter { background-color: #157347 !important; color: white !important; }
+
+.navbar { background-color: #157347; }
+.sidebar { min-height: calc(100vh - 70px); background: #fff; }
+.nav-link.active { background-color: #d1e7dd !important; color: #0b4628 !important; font-weight: 600; }
+
+/* Stat Cards */
+.stat-card { border: none; border-radius: 12px; border-bottom: 4px solid transparent; transition: transform 0.2s; }
+.stat-card:hover { transform: translateY(-5px); }
+.stat-card.pending { border-color: #ffc107; }
+.stat-card.approved { border-color: #198754; }
+.stat-card.total { border-color: #198754; }
+.stat-card.users { border-color: #198754; }
+
+/* Item Rows */
+.item-row { background: #fff; border: 1px solid #dee2e6; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; }
+.item-thumbnail { width: 150px; height: 130px; object-fit: cover; border-radius: 8px; }
 
 @media (min-width: 768px) {
     #sidebarMenu {

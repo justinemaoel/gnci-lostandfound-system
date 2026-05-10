@@ -2,23 +2,28 @@
 session_start();
 require_once __DIR__ . '/includes/db.php';
 
-// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: auth/login.php");
     exit();
 }
 
-$fullName = trim(($_SESSION['first_name'] ?? 'User') . " " . ($_SESSION['last_name'] ?? ''));
-$userRole = $_SESSION['role'] ?? 'Student';
+$fullName = trim(($_SESSION['first_name'] ?? 'user') . " " . ($_SESSION['last_name'] ?? ''));
+$userRole = $_SESSION['role'] ?? 'student';
 
-// Fetch ALL approved items from ALL users + join with users table for Role and Contact info
+// Determine correct dashboard link based on role
+$adminEmail    = "admin.lostandfound@gmail.com";
+$currentEmail  = $_SESSION['email'] ?? '';
+$isAdmin       = strtolower(trim($currentEmail)) === strtolower($adminEmail);
+$dashboardLink = $isAdmin ? 'admin-dash.php' : 'user-dash.php';
+
+// Fetch ALL approved items — include submitted_to_office
 $query = "SELECT items.*, categories.category_name, 
-                 users.first_name, users.last_name, users.role, users.email as user_email
-          FROM items 
-          LEFT JOIN categories ON items.category_id = categories.id
-          LEFT JOIN users ON items.user_id = users.id
-          WHERE items.upload_status = 'approved' 
-          ORDER BY items.created_at DESC";
+        users.first_name, users.last_name, users.role, users.email as user_email
+        FROM items 
+        LEFT JOIN categories ON items.category_id = categories.id
+        LEFT JOIN users ON items.user_id = users.id
+        WHERE items.upload_status = 'approved' 
+        ORDER BY items.created_at DESC";
 
 $stmt = $pdo->query($query);
 $browse_items = $stmt->fetchAll();
@@ -41,20 +46,21 @@ $browse_items = $stmt->fetchAll();
             <button class="navbar-toggler d-md-none me-3 border-white text-white" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
                 <i class="bi bi-list"></i>
             </button>
-            <a class="navbar-brand d-flex align-items-center text-white p-0" href="user-dash.php">
+            <a class="navbar-brand d-flex align-items-center text-white p-0" href="<?= $dashboardLink ?>">
                 <img src="assets/images/GNC Logo.svg" alt="Logo" width="40" class="me-2">
-                <div class="lh-1 d-none d-sm-block">
+                <div class="lh-1">
                     <span class="fw-bold d-block small">Guagua National Colleges</span>
                     <small style="font-size: 0.7rem;">Lost & Found</small>
                 </div>
             </a>
         </div>
+
         <div class="text-white d-flex align-items-center">
             <div class="text-end me-3 d-none d-md-block lh-1">
-                <div class="fw-bold mb-0 lh-1"><?php echo htmlspecialchars($fullName); ?></div>
-                <small class="text-uppercase opacity-75" style="font-size: 10px;"><?php echo htmlspecialchars($userRole); ?></small>
+                <div class="fw-bold mb-0 lh-1"><?= htmlspecialchars($fullName) ?></div>
+                <small class="text-uppercase opacity-75" style="font-size: 10px;"><?= htmlspecialchars($userRole) ?></small>
             </div>
-            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($fullName); ?>&background=0b5a30&color=fff" class="user-avatar shadow-sm" style="width: 35px; height: 35px; border-radius: 50%;">
+            <img src="https://ui-avatars.com/api/?name=<?= urlencode($fullName) ?>&background=0b5a30&color=fff" width="35" height="35" class="rounded-circle">
         </div>
     </header>
 
@@ -69,7 +75,7 @@ $browse_items = $stmt->fetchAll();
                 <div class="offcanvas-body d-flex flex-column p-3 flex-grow-1">
                     <ul class="nav nav-pills flex-column mb-auto">
                         <li class="nav-item mb-2">
-                            <a href="user-dash.php" class="nav-link d-flex align-items-center" style="color: #0b4628;">
+                            <a href="<?= $dashboardLink ?>" class="nav-link d-flex align-items-center" style="color: #0b4628;">
                                 <i class="bi bi-house-door-fill me-2"></i> Home
                             </a>
                         </li>
@@ -91,29 +97,42 @@ $browse_items = $stmt->fetchAll();
                     </div>
                 </div>
             </nav>
+
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4 min-vh-100">
                 <h3 class="fw-bold mb-4">Browse All Items</h3>
                 
                 <div class="row g-4">
                     <?php if (count($browse_items) > 0): ?>
                         <?php foreach($browse_items as $item): ?>
+                            <?php
+                                $img = !empty($item['item_img'])
+                                    ? "uploads/" . $item['item_img']
+                                    : "assets/images/placeholder.png";
+
+                                // Pass submitted_to_office to JS as 'true' or 'false' string
+                                $submittedToOffice = !empty($item['submitted_to_office']) ? 'true' : 'false';
+                            ?>
                             <div class="col-md-6 col-xl-4">
                                 <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
-                                    <?php $img = !empty($item['item_img']) ? "uploads/".$item['item_img'] : "assets/images/placeholder.png"; ?>
-                                    <img src="<?= $img ?>" class="card-img-top object-fit-cover" style="height: 200px;">
+                                    <img src="<?= $img ?>" class="card-img-top object-fit-cover" style="height: 200px;"
+                                        onerror="this.src='assets/images/placeholder.png'">
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <h5 class="fw-bold mb-0 text-truncate" style="max-width: 70%;"><?= htmlspecialchars($item['item_name']) ?></h5>
+                                            <h5 class="fw-bold mb-0 text-truncate" style="max-width: 70%;">
+                                                <?= htmlspecialchars($item['item_name']) ?>
+                                            </h5>
                                             <span class="badge rounded-pill <?= (strtolower($item['post_type']) == 'found') ? 'bg-success' : 'bg-danger' ?>">
                                                 <?= ucfirst($item['post_type']) ?>
                                             </span>
                                         </div>
                                         <p class="text-muted small mb-3">
-                                            <i class="bi bi-person me-1 text-success"></i> <strong>Posted by:</strong> <?= htmlspecialchars($item['first_name'] . " " . $item['last_name']) ?><br>
+                                            <i class="bi bi-person me-1 text-success"></i>
+                                            <strong>Posted by:</strong> <?= htmlspecialchars($item['first_name'] . " " . $item['last_name']) ?><br>
                                             <i class="bi bi-geo-alt me-1 text-success"></i> <?= htmlspecialchars($item['location_text']) ?>
                                         </p>
-                                        <button class="btn btn-outline-success w-100 btn-sm fw-bold" 
-                                            data-bs-toggle="modal" data-bs-target="#viewItemModal"
+                                        <button class="btn btn-outline-success w-100 btn-sm fw-bold"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#viewItemModal"
                                             data-name="<?= htmlspecialchars($item['item_name']) ?>"
                                             data-type="<?= $item['post_type'] ?>"
                                             data-category="<?= htmlspecialchars($item['category_name'] ?? 'General') ?>"
@@ -125,7 +144,8 @@ $browse_items = $stmt->fetchAll();
                                             data-user="<?= htmlspecialchars($item['first_name'] . " " . $item['last_name']) ?>"
                                             data-role="<?= ucfirst($item['role'] ?? 'Student') ?>"
                                             data-email="<?= htmlspecialchars($item['contact_email'] ?: ($item['user_email'] ?? 'Not provided')) ?>"
-                                            data-phone="<?= htmlspecialchars($item['contact_num'] ?? 'Not provided') ?>">
+                                            data-phone="<?= htmlspecialchars($item['contact_num'] ?? 'Not provided') ?>"
+                                            data-submitted-to-office="<?= $submittedToOffice ?>">
                                             View Details
                                         </button>
                                     </div>
@@ -143,6 +163,7 @@ $browse_items = $stmt->fetchAll();
         </div>
     </div>
 
+    <!-- VIEW DETAILS MODAL -->
     <div class="modal fade" id="viewItemModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 rounded-4 shadow-lg p-3">
@@ -154,7 +175,9 @@ $browse_items = $stmt->fetchAll();
                     <div class="row g-4">
                         <div class="col-md-5">
                             <div class="position-relative mb-3">
-                                <img id="v-img" src="" class="img-fluid rounded-3 w-100 object-fit-cover" style="height: 280px; background: #eee;">
+                                <img id="v-img" src="" class="img-fluid rounded-3 w-100 object-fit-cover"
+                                    style="height: 280px; background: #eee;"
+                                    onerror="this.src='assets/images/placeholder.png'">
                                 <span id="v-type" class="badge position-absolute top-0 end-0 m-2 rounded-pill px-3"></span>
                             </div>
                             <h5 class="fw-bold mb-2">Description</h5>
@@ -179,12 +202,13 @@ $browse_items = $stmt->fetchAll();
                         <div class="col-md-7 border-start ps-md-4">
                             <h2 id="v-name" class="fw-bold mb-1"></h2>
                             <div class="mb-4">
-                                <span id="v-cat" class="badge border text-success fw-normal" style="border-color: #d1e7dd !important; background-color: #f0fdf4; color: #157347;"></span>
+                                <span id="v-cat" class="badge border text-success fw-normal"
+                                      style="border-color: #d1e7dd !important; background-color: #f0fdf4; color: #157347;"></span>
                             </div>
                             
                             <hr class="opacity-10 mb-4">
 
-                            <h5 class="fw-bold mb-3">Location & Time</h5>
+                            <h5 class="fw-bold mb-3">Location &amp; Time</h5>
                             <div class="d-flex align-items-start mb-3">
                                 <i class="bi bi-geo-alt text-success fs-5 me-3"></i>
                                 <div>
@@ -211,9 +235,7 @@ $browse_items = $stmt->fetchAll();
 
                             <h5 class="fw-bold mb-2">Item Status</h5>
                             <div id="v-status-box" class="alert d-flex align-items-start gap-3 border-0 rounded-3 p-3">
-                                <div class="d-flex align-items-center justify-content-center" style="min-width: 35px; height: 35px;">
-                                    <i class="bi bi-info-circle-fill text-success" id="v-status-icon"></i>
-                                </div>
+                                <i id="v-status-icon" class="bi bi-info-circle-fill fs-5"></i>
                                 <div id="v-status-text" class="small"></div>
                             </div>
                         </div>
@@ -225,71 +247,90 @@ $browse_items = $stmt->fetchAll();
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // View Modal Population
         const viewModal = document.getElementById('viewItemModal');
         if (viewModal) {
             viewModal.addEventListener('show.bs.modal', function (event) {
                 const button = event.relatedTarget;
-                const info = {
-                    name: button.getAttribute('data-name'),
-                    loc: button.getAttribute('data-location'),
-                    date: button.getAttribute('data-date'),
-                    time: button.getAttribute('data-time'),
-                    desc: button.getAttribute('data-desc'),
-                    img: button.getAttribute('data-img'),
-                    type: button.getAttribute('data-type'),
-                    cat: button.getAttribute('data-category'),
-                    email: button.getAttribute('data-email'),
-                    phone: button.getAttribute('data-phone')
-                };
 
-                // Basic Field Population
-                document.getElementById('v-name').textContent = info.name;
-                document.getElementById('v-loc').textContent = info.loc;
-                document.getElementById('v-date').textContent = info.date;
-                document.getElementById('v-time').textContent = info.time;
-                document.getElementById('v-desc').textContent = info.desc;
-                document.getElementById('v-cat').textContent = info.cat;
-                document.getElementById('v-img').src = info.img;
-                document.getElementById('v-email').textContent = info.email;
-                document.getElementById('v-phone').textContent = info.phone;
-                
-                const userName = button.getAttribute('data-user');
-                document.getElementById('v-avatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=0b5a30&color=fff`;
+                // Populate all basic fields
+                document.getElementById('v-name').textContent      = button.getAttribute('data-name');
+                document.getElementById('v-loc').textContent       = button.getAttribute('data-location');
+                document.getElementById('v-date').textContent      = button.getAttribute('data-date');
+                document.getElementById('v-time').textContent      = button.getAttribute('data-time');
+                document.getElementById('v-desc').textContent      = button.getAttribute('data-desc');
+                document.getElementById('v-cat').textContent       = button.getAttribute('data-category');
+                document.getElementById('v-img').src               = button.getAttribute('data-img');
+                document.getElementById('v-email').textContent     = button.getAttribute('data-email');
+                document.getElementById('v-phone').textContent     = button.getAttribute('data-phone');
+                document.getElementById('v-user-name').textContent = button.getAttribute('data-user');
+                document.getElementById('v-user-role').textContent = button.getAttribute('data-role');
+                document.getElementById('v-avatar').src =
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(button.getAttribute('data-user'))}&background=0b5a30&color=fff`;
 
-                const statusBox = document.getElementById('v-status-box');
-                const statusText = document.getElementById('v-status-text');
-                const typeBadge = document.getElementById('v-type');
+                const postType          = button.getAttribute('data-type');
+                const submittedToOffice = button.getAttribute('data-submitted-to-office') === 'true';
+
+                const typeBadge  = document.getElementById('v-type');
+                const statusBox  = document.getElementById('v-status-box');
                 const statusIcon = document.getElementById('v-status-icon');
+                const statusText = document.getElementById('v-status-text');
 
-                if(info.type === 'Lost') {
+                // Always reset inline styles first so previous state doesn't bleed through
+                statusBox.removeAttribute('style');
+                statusIcon.removeAttribute('style');
+
+                if (postType === 'Lost') {
+                    // ── STATE 1: LOST ──────────────────────────────────────
                     typeBadge.textContent = 'Lost';
-                    typeBadge.className = 'badge bg-danger position-absolute top-0 end-0 m-2 rounded-pill px-3';
-                    statusBox.className = 'alert alert-danger d-flex align-items-start gap-2 border-0 rounded-3';
-                    
-                    // Styling for Lost: Dark Red Icon
-                    statusIcon.className = 'bi bi-exclamation-circle-fill fs-5'; 
-                    statusIcon.style.color = "#58151C"; 
+                    typeBadge.className   = 'badge bg-danger position-absolute top-0 end-0 m-2 rounded-pill px-3';
+
+                    statusBox.className             = 'alert d-flex align-items-start gap-3 border-0 rounded-3 p-3';
+                    statusBox.style.backgroundColor = '#EBCFCD';
+                    statusBox.style.borderLeft      = '4px solid #5E0006';
+
+                    statusIcon.className   = 'bi bi-exclamation-circle-fill fs-5';
+                    statusIcon.style.color = '#5E0006';
 
                     statusText.innerHTML = `
-                        <div class="fw-bold mb-1">Someone is looking for this item</div>
-                        <div class="fw-light">If you have found this item, please contact the owner using the information provided.</div>
+                        <div class="fw-bold mb-1" style="color:#5E0006; font-size:18px;">Someone is looking for this item</div>
+                        <div class="fw-light" style="color:#343A40;">If you have found this item, please contact the owner using the information provided.</div>
                     `;
-                } else {
+
+                } else if (!submittedToOffice) {
+                    // ── STATE 2: FOUND — still held by finder ──────────────
                     typeBadge.textContent = 'Found';
-                    typeBadge.className = 'badge bg-success position-absolute top-0 end-0 m-2 rounded-pill px-3';
-                    statusBox.className = 'alert alert-success d-flex align-items-start gap-2 border-0 rounded-3';
-                    
-                    // Styling for Found: Dark Green Icon (#0A3634)
-                    statusIcon.className = 'bi bi-info-circle-fill fs-5';
-                    statusIcon.style.color = "#0A3634";
+                    typeBadge.className   = 'badge bg-success position-absolute top-0 end-0 m-2 rounded-pill px-3';
+
+                    statusBox.className             = 'alert d-flex align-items-start gap-3 border-0 rounded-3 p-3';
+                    statusBox.style.backgroundColor = '#fff3cd';
+                    statusBox.style.borderLeft      = '4px solid #ffc107';
+
+                    statusIcon.className   = 'bi bi-person-fill fs-5';
+                    statusIcon.style.color = '#856404';
 
                     statusText.innerHTML = `
-                        <div class="fw-bold mb-1 text-dark">Surrendered to Lost & Found Office</div>
-                        <p class="fw-light mb-2">This item has been turned over to the GNC Lost & Found Management Office. Please visit the office during business hours to claim your item.</p>
-                        <div class="fw-bold small">
-                            <strong>Office Hours:</strong> Monday - Saturday, 8:00 AM - 5:00 PM<br>
-                            <strong>Location:</strong> Main Building, Ground Floor
+                        <div class="fw-bold mb-1" style="color:#856404; font-size:18px;">Currently Held by Finder</div>
+                        <p class="fw-light mb-0" style="color:#343A40;">The person who found this item is currently holding it. You can contact them directly using the information below.</p>
+                    `;
+
+                } else {
+                    // ── STATE 3: FOUND — submitted to office ───────────────
+                    typeBadge.textContent = 'Found';
+                    typeBadge.className   = 'badge bg-success position-absolute top-0 end-0 m-2 rounded-pill px-3';
+
+                    statusBox.className             = 'alert d-flex align-items-start gap-3 border-0 rounded-3 p-3';
+                    statusBox.style.backgroundColor = '#D4E3DA';
+                    statusBox.style.borderLeft      = '4px solid #0F6631';
+
+                    statusIcon.className   = 'bi bi-info-circle-fill fs-5';
+                    statusIcon.style.color = '#0F6631';
+
+                    statusText.innerHTML = `
+                        <div class="fw-bold mb-1" style="color:#0F6631; font-size:18px;">Surrendered to Lost &amp; Found Office</div>
+                        <p class="fw-light mb-2" style="color:#343A40;">This item has been turned over to the GNC Lost &amp; Found Management Office. Please visit the office during business hours to claim your item.</p>
+                        <div class="small">
+                            <strong>Office Hours:</strong> <span style="color:#343A40; font-weight:500;">Monday - Saturday, 8:00 AM - 5:00 PM</span><br>
+                            <strong>Location:</strong> <span style="color:#343A40; font-weight:500;">Main Building, Ground Floor</span>
                         </div>
                     `;
                 }
