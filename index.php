@@ -36,7 +36,7 @@ $conn->close();
     <nav class="navbar navbar-expand-lg shadow-sm">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="#">
-                <img src="assets/images/GNC Logo.svg" alt="GNC Logo" width="50" height="50" class="me-2">
+                <img src="assets/images/GNC Logo.svg" href="index.php"alt="GNC Logo" width="50" height="50" class="me-2">
                 <div class="brand-text">
                     <span class="fw-bold d-block lh-1">Guagua National Colleges</span>
                     <small class="d-block">Lost & Found</small>
@@ -235,7 +235,7 @@ $conn->close();
             </div>
 
             <div class="text-center mt-5">
-                <a href="browse-items.php" class="btn btn-success btn-lg px-5" style="background-color: #0b4628; border: none;">
+                <a href="view-all-items.php" class="btn btn-success btn-lg px-5" style="background-color: #0b4628; border: none;">
                     View All Items
                 </a>
             </div>
