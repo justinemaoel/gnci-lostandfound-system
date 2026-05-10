@@ -1,3 +1,4 @@
+post.php
 <?php
 session_start();
 require '../includes/db.php';
@@ -14,8 +15,8 @@ if (isset($_POST['submit_post']) && isset($_SESSION['user_id'])) {
     // 2. Set Default Status
     $status = "available";
 
-    // 2b. Auto-approve so the item appears on the public index
-    $upload_status = "approved";
+    // 2b. Require admin confirmation first
+    $upload_status = "pending";
     
     // 3. Clean Optional Fields
     $notes = !empty($_POST['notes']) ? $_POST['notes'] : "";
@@ -45,7 +46,7 @@ if (isset($_POST['submit_post']) && isset($_SESSION['user_id'])) {
     ];
 
     if ($stmt->execute($params)) {
-        header("Location: ../user-dash.php?success=1");
+        header("Location: ../user-dash.php?success=pending");
         exit();
     } else {
         // Updated error handling to use PDO's errorInfo() instead of MySQLi's ->error

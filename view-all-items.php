@@ -151,11 +151,11 @@ $conn->close();
         <div class="mb-5">
             <div class="filter-pills-container">
                 <a href="?type=all&q=<?= urlencode($search) ?>"
-                   class="filter-pill <?= $filterType === 'all'   ? 'active' : '' ?>">All Items</a>
+                class="filter-pill <?= $filterType === 'all'   ? 'active' : '' ?>">All Items</a>
                 <a href="?type=found&q=<?= urlencode($search) ?>"
-                   class="filter-pill <?= $filterType === 'found' ? 'active' : '' ?>">Found Items</a>
+                class="filter-pill <?= $filterType === 'found' ? 'active' : '' ?>">Found Items</a>
                 <a href="?type=lost&q=<?= urlencode($search) ?>"
-                   class="filter-pill <?= $filterType === 'lost'  ? 'active' : '' ?>">Lost Items</a>
+                class="filter-pill <?= $filterType === 'lost'  ? 'active' : '' ?>">Lost Items</a>
             </div>
         </div>
 
@@ -171,7 +171,7 @@ $conn->close();
                     ?>
                     <div class="col-md-6 col-lg-4">
                         <div class="card h-100 shadow-sm border-0 overflow-hidden"
-                             style="border-radius:12px; border:1px solid #eee !important;">
+                            style="border-radius:12px; border:1px solid #eee !important;">
                             <div style="height:250px; background-color:#f8f9fa; position:relative;">
                                 <span class="badge <?= $badgeClass ?> position-absolute top-0 end-0 m-3 px-3 py-2">
                                     <?= htmlspecialchars($type) ?>

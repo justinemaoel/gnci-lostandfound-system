@@ -61,27 +61,36 @@ $browse_items = $stmt->fetchAll();
     <div class="container-fluid">
         <div class="row">
             <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar offcanvas-md offcanvas-start bg-white border-end p-0">
+                <div class="offcanvas-header d-md-none border-bottom">
+                    <h5 class="offcanvas-title fw-bold">Menu</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu"></button>
+                </div>
+                
                 <div class="offcanvas-body d-flex flex-column p-3 flex-grow-1">
                     <ul class="nav nav-pills flex-column mb-auto">
                         <li class="nav-item mb-2">
-                            <a href="user-dash.php" class="nav-link text-dark d-flex align-items-center">
-                                <i class="bi bi-house-door me-2"></i> Home
+                            <a href="user-dash.php" class="nav-link d-flex align-items-center" style="color: #0b4628;">
+                                <i class="bi bi-house-door-fill me-2"></i> Home
                             </a>
                         </li>
                         <li class="nav-item mb-2">
-                            <a href="browse-item.php" class="nav-link active d-flex align-items-center" style="background-color: #d1e7dd; color: #0b4628;">
+                            <a href="browse-item.php" class="nav-link d-flex align-items-center" style="background-color: #d1e7dd; color: #0b4628;">
                                 <i class="bi bi-search me-2"></i> Browse Item
                             </a>
                         </li>
                     </ul>
+                    
                     <div class="mt-auto border-top pt-3">
-                        <a href="auth/logout.php" class="nav-link text-danger d-flex align-items-center fw-semibold">
-                            <i class="bi bi-box-arrow-right me-2"></i> Sign out
-                        </a>
+                        <ul class="nav nav-pills flex-column pb-3">
+                            <li class="nav-item">
+                                <a href="auth/logout.php" class="nav-link text-danger d-flex align-items-center fw-semibold">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Sign out
+                                </a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </nav>
-
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4 min-vh-100">
                 <h3 class="fw-bold mb-4">Browse All Items</h3>
                 
