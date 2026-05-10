@@ -85,7 +85,7 @@ $conn->close();
                     <li class="nav-item"><a class="nav-link px-3" href="#footer">ABOUT</a></li>
                     <li class="nav-item"><a class="nav-link px-3" href="#items">BROWSE ITEMS</a></li>
                     <li class="nav-item ms-lg-3">
-                        <a class="nav-link btn-login-reg px-4 py-2" href="auth/login.php">LOGIN / REGISTER</a>
+                        <a id="login-register" class="nav-link px-4 py-2" href="auth/login.php">LOGIN / REGISTER</a>
                     </li>
                 </ul>
             </div>
@@ -98,16 +98,16 @@ $conn->close();
         <div class="container">
             <div class="row">
                 <div class="col-lg-8 col-xl-6">
-                    <h1 class="display-1 fw-bold mb-0">Search. Report.</h1>
+                    <h1 class="display-1 fw-bold mb-0" style="color:#DBFEB8;">Search. Report.</h1>
                     <h1 class="display-1 fw-bold mb-4">Recover.</h1>
                     <p class="fs-4 fw-light mb-5 opacity-75">
                         Built for GNCians to help each other find <br class="d-none d-md-block">
                         lost items on campus.
                     </p>
-                    <div class="d-flex flex-wrap gap-3">
-                        <a href="#" class="btn btn-light btn-lg px-4 py-2 fw-semibold">Report Lost Items</a>
-                        <a href="#items" class="btn btn-outline-light btn-lg px-4 py-2 fw-semibold">Browse Found Items</a>
-                    </div>
+                <div class="d-flex flex-column flex-md-row gap-3 mt-4">
+                    <a href="auth/register.php" class="btn btn-light btn-lg px-4 py-3 fw-bold">Report Lost Items</a>
+                    <a href="#items" class="btn btn-outline-light btn-lg px-4 py-3 fw-bold">Browse Found Items</a>
+                </div>
                 </div>
             </div>
         </div>
