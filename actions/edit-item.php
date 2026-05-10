@@ -20,6 +20,7 @@ $time = $_POST['time'];
 $datetime = $date . ' ' . $time;
 $desc = $_POST['desc'];
 $notes = $_POST['notes'] ?? '';
+$submitted_to_office = isset($_POST['submitted_to_office']) ? 1 : 0;
 
 // Prevent "Undefined array key" warnings
 $contact_email = $_POST['contact_email'] ?? '';
@@ -52,33 +53,35 @@ if (isset($_FILES['item_image']) && $_FILES['item_image']['error'] === UPLOAD_ER
 }
 
 // 3. Database Update
-$update_sql = "UPDATE items SET 
-    post_type = ?, 
-    item_name = ?, 
-    category_id = ?, 
-    location_text = ?, 
-    date_reported = ?, 
-    description = ?, 
-    notes = ?, 
-    item_img = ?, 
-    contact_email = ?, 
-    contact_num = ? 
+$update_sql = "UPDATE items SET
+    post_type = ?,
+    item_name = ?,
+    category_id = ?,
+    location_text = ?,
+    date_reported = ?,
+    description = ?,
+    notes = ?,
+    item_img = ?,
+    contact_email = ?,
+    contact_num = ?,
+    submitted_to_office = ?
     WHERE id = ? AND user_id = ?";
 
 $stmt = $pdo->prepare($update_sql);
 
 $success = $stmt->execute([
-    $post_type, 
-    $item_name, 
-    $category_id, 
-    $location_input, 
-    $datetime, 
-    $desc, 
-    $notes, 
-    $filename, 
-    $contact_email, 
+    $post_type,
+    $item_name,
+    $category_id,
+    $location_input,
+    $datetime,
+    $desc,
+    $notes,
+    $filename,
+    $contact_email,
     $contact_phone,
-    $item_id, 
+    $submitted_to_office,
+    $item_id,
     $user_id
 ]);
 

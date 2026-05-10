@@ -1,6 +1,10 @@
 .user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
 .active-filter { background-color: #157347 !important; color: white !important; }
 
+.item-card {
+    margin-bottom: 0 !important;
+}
+
 @media (min-width: 768px) {
     #sidebarMenu {
         position: sticky;

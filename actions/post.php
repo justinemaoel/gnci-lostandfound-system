@@ -20,29 +20,31 @@ if (isset($_POST['submit_post']) && isset($_SESSION['user_id'])) {
     
     // 3. Clean Optional Fields
     $notes = !empty($_POST['notes']) ? $_POST['notes'] : "";
+    $submitted_to_office = isset($_POST['submitted_to_office']) ? 1 : 0;
 
     // 4. Prepare SQL
-    $sql = "INSERT INTO items (user_id, category_id, item_name, location_text, description, notes, status, upload_status, post_type, date_reported, time_last_seen, contact_email, contact_num, item_img) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    
+    $sql = "INSERT INTO items (user_id, category_id, item_name, location_text, description, notes, status, upload_status, post_type, date_reported, time_last_seen, contact_email, contact_num, item_img, submitted_to_office)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
     $stmt = $pdo->prepare($sql);
-    
+
     // 5. Execute with Parameters (PDO way)
     $params = [
-        $_SESSION['user_id'], 
-        $_POST['category_id'], 
-        $_POST['item_name'], 
-        $_POST['location_input'], 
-        $_POST['desc'], 
-        $notes, 
+        $_SESSION['user_id'],
+        $_POST['category_id'],
+        $_POST['item_name'],
+        $_POST['location_input'],
+        $_POST['desc'],
+        $notes,
         $status,
         $upload_status,
-        $_POST['post_type'], 
-        $_POST['date'], 
-        $_POST['time'], 
-        $_POST['email'], 
-        $_POST['phone'], 
-        $img_name
+        $_POST['post_type'],
+        $_POST['date'],
+        $_POST['time'],
+        $_POST['email'],
+        $_POST['phone'],
+        $img_name,
+        $submitted_to_office
     ];
 
     if ($stmt->execute($params)) {

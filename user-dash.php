@@ -119,8 +119,8 @@ $item_count = count($items);
                 <div class="row g-3">
                     <?php if ($item_count > 0): ?>
                         <?php foreach($items as $row): ?>
-                            <div class="col-12 mb-3">
-                                <div class="col-12 mb-3 item-card <?php echo strtolower($row['post_type']); ?>">
+                            <div class="col-12">
+                                <div class="col-12 item-card <?php echo strtolower($row['post_type']); ?>">
                                     <div class="d-flex align-items-center">
                                         <div class="rounded-3 overflow-hidden me-3 position-relative" style="width: 120px; height: 100px;">
                                             <?php $img = !empty($row['item_img']) ? "uploads/".$row['item_img'] : "assets/images/placeholder.png"; ?>
@@ -154,9 +154,9 @@ $item_count = count($items);
                                         </div>
 
                                         <div class="d-flex gap-2">
-                                            <button type="button" 
-                                                class="btn btn-outline-secondary btn-sm px-3" 
-                                                data-bs-toggle="modal" 
+                                            <button type="button"
+                                                class="btn btn-outline-secondary btn-sm px-3"
+                                                data-bs-toggle="modal"
                                                 data-bs-target="#viewItemModal"
                                                 data-name="<?php echo htmlspecialchars($row['item_name']); ?>"
                                                 data-type="<?php echo $row['post_type']; ?>"
@@ -169,13 +169,14 @@ $item_count = count($items);
                                                 data-user="<?php echo htmlspecialchars($fullName); ?>"
                                                 data-role="<?php echo htmlspecialchars($role); ?>"
                                                 data-email="<?php echo htmlspecialchars($row['contact_email'] ?? 'Not provided'); ?>"
-                                                data-phone="<?php echo htmlspecialchars($row['contact_num'] ?? 'Not provided'); ?>">
+                                                data-phone="<?php echo htmlspecialchars($row['contact_num'] ?? 'Not provided'); ?>"
+                                                data-submitted-to-office="<?php echo isset($row['submitted_to_office']) && $row['submitted_to_office'] ? 'true' : 'false'; ?>">
                                                 <i class="bi bi-eye"></i> View
                                             </button>
 
-                                            <button type="button" 
-                                                class="btn btn-outline-secondary btn-sm px-3 btn-edit-trigger" 
-                                                data-bs-toggle="modal" 
+                                            <button type="button"
+                                                class="btn btn-outline-secondary btn-sm px-3 btn-edit-trigger"
+                                                data-bs-toggle="modal"
                                                 data-bs-target="#editItemModal"
                                                 data-id="<?php echo $row['id']; ?>"
                                                 data-name="<?php echo htmlspecialchars($row['item_name']); ?>"
@@ -188,7 +189,8 @@ $item_count = count($items);
                                                 data-notes="<?php echo htmlspecialchars($row['notes'] ?? ''); ?>"
                                                 data-img="<?php echo $img; ?>"
                                                 data-email="<?php echo htmlspecialchars($row['contact_email'] ?? ''); ?>"
-                                                data-phone="<?php echo htmlspecialchars($row['contact_num'] ?? ''); ?>">
+                                                data-phone="<?php echo htmlspecialchars($row['contact_num'] ?? ''); ?>"
+                                                data-submitted-to-office="<?php echo isset($row['submitted_to_office']) && $row['submitted_to_office'] ? 'true' : 'false'; ?>">
                                                 <i class="bi bi-pencil"></i> Edit
                                             </button>
 
@@ -297,16 +299,29 @@ $item_count = count($items);
                                     </div>
                                 </div>
 
-                                <div class="contact-info-card mt-auto">
-                                    <p class="small mb-2 opacity-75">Your Contact Information:</p>
-                                    <div class="row g-2">
-                                        <div class="col-6">
-                                            <label class="fw-bold small mb-1">Email Address *</label>
-                                            <input type="email" name="email" class="form-control form-control-sm bg-light-gray border-secondary" required>
+                                <div class="contact-info-card mt-auto" style="background-color: #d1e7dd; border: 2px solid #5a8f6f; border-radius: 12px; padding: 25px;">
+                                    <div class="mb-3">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" name="submitted_to_office" id="submitted_to_office" style="width: 20px; height: 20px;">
+                                            <label class="form-check-label fw-bold ms-2" for="submitted_to_office" style="font-size: 16px;">
+                                                I have submitted this item to the Lost & Found Office
+                                            </label>
                                         </div>
-                                        <div class="col-6">
-                                            <label class="fw-bold small mb-1">Phone Number *</label>
-                                            <input type="text" name="phone" class="form-control form-control-sm bg-light-gray border-secondary" required>
+                                        <p class="small text-muted mb-0 ms-4">Check this if you've already turned the item over to the office.</p>
+                                    </div>
+
+                                    <hr style="border: none; border-top: 2px solid #5a8f6f; margin: 18px 0;">
+
+                                    <p style="color: #666; margin-bottom: 20px;">Since you're holding the item, please provide your contact information</p>
+
+                                    <div class="row g-3">
+                                        <div class="col-sm-6">
+                                            <label class="fw-bold mb-2" style="font-size: 15px;">Email Address *</label>
+                                            <input type="email" name="email" class="form-control" style="background-color: #D2CECE; border: 1px solid #999; border-radius: 6px; padding: 10px;" required>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <label class="fw-bold mb-2" style="font-size: 15px;">Phone Number *</label>
+                                            <input type="text" name="phone" class="form-control" style="background-color: #D2CECE; border: 1px solid #999; border-radius: 6px; padding: 10px;" required>
                                         </div>
                                     </div>
                                 </div>
@@ -470,16 +485,29 @@ $item_count = count($items);
                                     </div>
                                 </div>
 
-                                <div class="contact-info-card mt-auto" style="background-color: #d1e7dd; border-radius: 8px; padding: 15px;">
-                                    <p class="small mb-2 opacity-75">Your Contact Information:</p>
-                                    <div class="row g-2">
-                                        <div class="col-6">
-                                            <label class="fw-bold small mb-1">Email Address *</label>
-                                            <input type="email" name="email" id="edit_email" class="form-control form-control-sm bg-light-gray border-secondary" required>
+                                <div class="contact-info-card mt-auto" style="background-color: #d1e7dd; border: 2px solid #5a8f6f; border-radius: 12px; padding: 25px;">
+                                    <div class="mb-3">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" name="submitted_to_office" id="edit_submitted_to_office" style="width: 20px; height: 20px;">
+                                            <label class="form-check-label fw-bold ms-2" for="edit_submitted_to_office" style="font-size: 16px;">
+                                                I have submitted this item to the Lost & Found Office
+                                            </label>
                                         </div>
-                                        <div class="col-6">
-                                            <label class="fw-bold small mb-1">Phone Number *</label>
-                                            <input type="text" name="phone" id="edit_phone" class="form-control form-control-sm bg-light-gray border-secondary" required>
+                                        <p class="small text-muted mb-0 ms-4">Check this if you've already turned the item over to the office.</p>
+                                    </div>
+
+                                    <hr style="border: none; border-top: 2px solid #5a8f6f; margin: 18px 0;">
+
+                                    <p style="color: #666; margin-bottom: 20px;">Since you're holding the item, please provide your contact information</p>
+
+                                    <div class="row g-3">
+                                        <div class="col-sm-6">
+                                            <label class="fw-bold mb-2" style="font-size: 15px;">Email Address *</label>
+                                            <input type="email" name="email" id="edit_email" class="form-control" style="background-color: #D2CECE; border: 1px solid #999; border-radius: 6px; padding: 10px;" required>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <label class="fw-bold mb-2" style="font-size: 15px;">Phone Number *</label>
+                                            <input type="text" name="phone" id="edit_phone" class="form-control" style="background-color: #D2CECE; border: 1px solid #999; border-radius: 6px; padding: 10px;" required>
                                         </div>
                                     </div>
                                 </div>
@@ -581,22 +609,42 @@ $item_count = count($items);
                     typeBadge.textContent = 'Lost';
                     typeBadge.className = 'badge bg-danger position-absolute top-0 end-0 m-2 rounded-pill px-3';
                     statusBox.className = 'alert alert-danger d-flex align-items-start gap-2 border-0 rounded-3';
+                    statusBox.style.backgroundColor = '#EBCFCD';
+                    statusBox.style.borderLeft = '4px solid #5E0006';
+                    statusBox.style.color = '#5E0006';
                     statusText.innerHTML = `
-                        <div class="fw-bold mb-1">Someone is looking for this item</div>
+                        <div class="fw-bold mb-1" style="font-size: 18px;">Someone is looking for this item</div>
                         <div class="fw-light">If you have found this item, please contact the owner using the information provided.</div>
                     `;
                 } else {
                     typeBadge.textContent = 'Found';
                     typeBadge.className = 'badge bg-success position-absolute top-0 end-0 m-2 rounded-pill px-3';
-                    statusBox.className = 'alert alert-success d-flex align-items-start gap-2 border-0 rounded-3';
-                    statusText.innerHTML = `
-                        <div class="fw-bold mb-1 text-dark">Surrendered to Lost & Found Office</div>
-                        <p class="fw-light mb-2">This item has been turned over to the GNC Lost & Found Management Office. Please visit the office during business hours to claim your item.</p>
-                        <div class="small">
-                            <strong>Office Hours:</strong> Monday - Saturday, 8:00 AM - 5:00 PM<br>
-                            <strong>Location:</strong> Main Building, Ground Floor
-                        </div>
-                    `;
+
+                    const submittedToOffice = button.getAttribute('data-submitted-to-office') === 'true';
+
+                    if (!submittedToOffice) {
+                        statusBox.className = 'alert d-flex align-items-start gap-2 border-0 rounded-3';
+                        statusBox.style.backgroundColor = '#fff3cd';
+                        statusBox.style.borderLeft = '4px solid #ffc107';
+                        statusBox.style.color = '#FFD100';
+                        statusText.innerHTML = `
+                            <div class="fw-bold mb-1" style="color: #FFD100; font-size: 18px;">Currently Held by Finder</div>
+                            <p class="fw-light mb-0" style="color: #343A40;">The person who found this item is currently holding it. You can contact them directly using the information below.</p>
+                        `;
+                    } else {
+                        statusBox.className = 'alert alert-success d-flex align-items-start gap-2 border-0 rounded-3';
+                        statusBox.style.backgroundColor = '#D4E3DA';
+                        statusBox.style.borderLeft = '4px solid #0F6631';
+                        statusBox.style.color = '#0F6631';
+                        statusText.innerHTML = `
+                            <div class="fw-bold mb-1" style="color: #0F6631; font-size: 18px;">Surrendered to Lost & Found Office</div>
+                            <p class="fw-light mb-2" style="color: #343A40;">This item has been turned over to the GNC Lost & Found Management Office. Please visit the office during business hours to claim your item.</p>
+                            <div class="small">
+                                <strong>Office Hours:</strong> <span style="color: #343A40; font-weight: 500;">Monday - Saturday, 8:00 AM - 5:00 PM</span><br>
+                                <strong>Location:</strong> <span style="color: #343A40; font-weight: 500;">Main Building, Ground Floor</span>
+                            </div>
+                        `;
+                    }
                 }
             });
         }
@@ -632,6 +680,9 @@ $item_count = count($items);
                 document.getElementById('edit_notes').value = notes;
                 document.getElementById('edit_email').value = email;
                 document.getElementById('edit_phone').value = phone;
+
+                const submittedToOffice = button.getAttribute('data-submitted-to-office') === 'true';
+                document.getElementById('edit_submitted_to_office').checked = submittedToOffice;
 
                 // Toggle Radios
                 if (type && type.toLowerCase() === 'found') {
