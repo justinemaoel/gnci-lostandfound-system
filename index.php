@@ -29,7 +29,7 @@ $conn->close();
     <title>GNC | Lost & Found</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="assets/css/index.css">
+    <link rel="stylesheet" href="assets/css/index-style.css">
 </head>
 <body>
     <!-- NAVBAR -->
@@ -89,7 +89,6 @@ $conn->close();
         </div>
     </section>
 
-
     <!-- MISSION STATEMENT -->
     <section class="mission-section py-5 my-5">
         <div class="container text-center">
@@ -119,6 +118,52 @@ $conn->close();
                         </div>
                     </div>
 
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="how-it-works-section py-5 text-white">
+        <div class="container text-center">
+            <h2 class="display-5 fw-bold mb-2">How It Works</h2>
+            <p class="lead mb-5 opacity-75">
+                Simple steps to report and recover your items
+            </p>
+
+            <div class="steps-wrapper d-flex justify-content-between position-relative">
+                <div class="step-line"></div>
+
+                <div class="step-item">
+                    <div class="icon-circle">
+                        <img src="assets/images/Report the item.svg" alt="Report">
+                    </div>
+                    <h6 class="fw-bold mt-3">Report the Item</h6>
+                    <p class="small opacity-75">Fill out a simple form with details about your lost or found item.</p>
+                </div>
+
+                <div class="step-item">
+                    <div class="icon-circle">
+                        <img src="assets/images/add photos.svg" alt="Photos">
+                    </div>
+                    <h6 class="fw-bold mt-3">Add Photos</h6>
+                    <p class="small opacity-75">Upload clear photos to help identify the item more easily.</p>
+                </div>
+
+                <div class="step-item">
+                    <div class="icon-circle">
+                        <img src="assets/images/submit and wait.svg" alt="Submit">
+                    </div>
+                    <h6 class="fw-bold mt-3">Submit & Wait</h6>
+                    <p class="small opacity-75">Your report is sent to our admin team for verification and approval.</p>
+                </div>
+
+                <div class="step-item">
+                    <div class="icon-circle">
+                        <img src="assets/images/reach out.svg" alt="Reach Out">
+                    </div>
+                    <h6 class="fw-bold mt-3">Reach Out</h6>
+                    <p class="small opacity-75">Reach out to the uploader or admin to verify ownership and arrange the recovery of your item.</p>
                 </div>
             </div>
         </div>

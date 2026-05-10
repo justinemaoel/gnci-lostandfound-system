@@ -1,0 +1,56 @@
+.hero-section {
+    background-image: linear-gradient(to right, rgba(0, 60, 30, 0.9), rgba(0, 60, 30, 0)), 
+    url('assets/images/gnc-pic-desktop.png');
+    background-size: cover;
+    background-position: center;
+    height: 100vh; 
+}
+
+.how-it-works-section {
+    background-color: #064420; 
+    padding: 80px 0;
+}
+
+.steps-wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+
+.step-line {
+    position: absolute;
+    top: 40px; 
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.4);
+    z-index: 1;
+}
+
+.step-item {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    padding: 0 15px;
+}
+
+.step-item h6 {
+    font-size: 1.1rem;
+}
+
+.step-item p {
+    line-height: 1.4;
+    max-width: 200px;
+    margin: 0 auto;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .steps-wrapper {
+        flex-direction: column;
+        gap: 40px;
+    }
+    .step-line {
+        display: none;
+    }
+}

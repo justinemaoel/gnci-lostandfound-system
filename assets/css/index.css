@@ -1,7 +1,0 @@
-.hero-section {
-    background-image: linear-gradient(to right, rgba(0, 60, 30, 0.9), rgba(0, 60, 30, 0)), 
-                      url('assets/images/gnc-pic-desktop.png');
-    background-size: cover;
-    background-position: center;
-    height: 100vh; /* This makes it fill the screen */
-}
