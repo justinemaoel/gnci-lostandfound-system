@@ -64,7 +64,7 @@ $conn->close();
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg shadow-sm">
+    <nav class="navbar sticky-top navbar-expand-lg shadow-sm">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="#">
                 <img src="assets/images/GNC Logo.svg" alt="GNC Logo" width="50" height="50" class="me-2">
@@ -81,7 +81,7 @@ $conn->close();
                     <li class="nav-item"><a class="nav-link px-3" href="index.php">HOME</a></li>
                     <li class="nav-item"><a class="nav-link px-3" href="#items">BROWSE ITEMS</a></li>
                     <li class="nav-item ms-lg-3">
-                        <a id="login-register" class="nav-link px-4 py-2" href="auth/login.php">LOGIN / REGISTER</a>
+                        <a id="login-register" class="nav-link px-4 py-2" href="auth/login.php" target="_blank">LOGIN / REGISTER</a>
                     </li>
                 </ul>
             </div>

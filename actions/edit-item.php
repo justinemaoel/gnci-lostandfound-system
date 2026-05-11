@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['item_id'])) {
-    header("Location: ../my-activity.php");
+    header("Location: ../user-dash.php");
     exit();
 }
 
@@ -25,7 +25,7 @@ $redirect_base = match(true) {
     $is_admin && str_contains($referer, 'admin-dash') => '../admin-dash.php',
     $is_admin && str_contains($referer, 'my-activity') => '../my-activity.php',
     $is_admin => '../admin-dash.php',
-    default   => '../my-activity.php',
+    default   => '../user-dash.php',   // regular users go back to user-dash
 };
 
 $post_type           = $_POST['post_type'];
@@ -39,7 +39,7 @@ $desc                = $_POST['desc'];
 $notes               = $_POST['notes'] ?? '';
 $submitted_to_office = isset($_POST['submitted_to_office']) ? 1 : 0;
 $contact_email       = $_POST['email'] ?? '';
-$contact_num       = $_POST['phone'] ?? '';
+$contact_num         = $_POST['phone'] ?? '';
 
 // 2. Manage Images
 if ($is_admin) {

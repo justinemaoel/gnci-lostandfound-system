@@ -328,10 +328,7 @@ $item_count = count($items);
                                 <label class="form-label fw-bold small">Description *</label>
                                 <textarea name="desc" class="form-control" rows="4" placeholder="Provide detailed description..." required></textarea>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label fw-bold small">Additional Notes</label>
-                                <input type="text" name="notes" class="form-control" placeholder="Any additional information...">
-                            </div>
+
                             <div class="mb-3">
                                 <label class="form-label fw-bold small">Upload Photo *</label>
                                 <div class="border rounded p-4 text-center d-flex flex-column align-items-center" id="upload-container"
@@ -349,15 +346,15 @@ $item_count = count($items);
                                     </button>
                                 </div>
                             </div>
-                            <div class="mt-auto p-3 rounded-3" style="background-color:#d1e7dd; border:2px solid #5a8f6f;">
-                                <div class="form-check mb-2">
+                            <div class="mt-auto p-3 rounded-3" id="post-office-box" style="background-color:#d1e7dd; border:2px solid #5a8f6f;">
+                                <div class="form-check mb-2" id="post-checkbox-section">
                                     <input class="form-check-input" type="checkbox" name="submitted_to_office" id="submitted_to_office" style="width:20px; height:20px;">
                                     <label class="form-check-label fw-bold ms-2" for="submitted_to_office" style="font-size:15px;">
                                         I have submitted this item to the Lost &amp; Found Office
                                     </label>
                                 </div>
-                                <p class="small text-muted mb-0 ms-4">Check this if you've already turned the item over to the office.</p>
-                                <hr style="border-top:2px solid #5a8f6f; margin:14px 0;">
+                                <p class="small text-muted mb-0 ms-4" id="post-checkbox-desc">Check this if you've already turned the item over to the office.</p>
+                                <hr id="post-office-hr" style="border-top:2px solid #5a8f6f; margin:14px 0;">
                                 <p class="small mb-3" style="color:#666;">Contact information for this item</p>
                                 <div class="row g-3">
                                     <div class="col-sm-6">
@@ -489,15 +486,13 @@ $item_count = count($items);
                                 </div>
                             </div>
                         </div>
+
                         <div class="col-md-6 d-flex flex-column">
                             <div class="mb-3">
                                 <label class="form-label fw-bold small">Description *</label>
                                 <textarea name="desc" id="edit_desc" class="form-control" rows="4" placeholder="Provide detailed description..." required></textarea>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label fw-bold small">Additional Notes</label>
-                                <input type="text" name="notes" id="edit_notes" class="form-control" placeholder="Any additional information...">
-                            </div>
+
                             <div class="mb-3">
                                 <label class="form-label fw-bold small">Upload Photo (Leave empty to keep existing)</label>
                                 <div class="border rounded p-4 text-center d-flex flex-column align-items-center" id="edit-upload-container"
@@ -515,15 +510,15 @@ $item_count = count($items);
                                     </button>
                                 </div>
                             </div>
-                            <div class="mt-auto p-3 rounded-3" style="background-color:#d1e7dd; border:2px solid #5a8f6f;">
-                                <div class="form-check mb-2">
+                            <div class="mt-auto p-3 rounded-3" id="edit-office-box" style="background-color:#d1e7dd; border:2px solid #5a8f6f;">
+                                <div class="form-check mb-2" id="edit-checkbox-section">
                                     <input class="form-check-input" type="checkbox" name="submitted_to_office" id="edit_submitted_to_office" style="width:20px; height:20px;">
                                     <label class="form-check-label fw-bold ms-2" for="edit_submitted_to_office" style="font-size:16px;">
                                         I have submitted this item to the Lost &amp; Found Office
                                     </label>
                                 </div>
-                                <p class="small text-muted mb-0 ms-4">Check this if you've already turned the item over to the office.</p>
-                                <hr style="border-top:2px solid #5a8f6f; margin:14px 0;">
+                                <p class="small text-muted mb-0 ms-4" id="edit-checkbox-desc">Check this if you've already turned the item over to the office.</p>
+                                <hr id="edit-office-hr" style="border-top:2px solid #5a8f6f; margin:14px 0;">
                                 <p class="small mb-3" style="color:#666;">Contact information for this item</p>
                                 <div class="row g-3">
                                     <div class="col-sm-6">
@@ -552,7 +547,7 @@ $item_count = count($items);
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    // Filter logic
+    // ── Filter logic ──────────────────────────────────────────────────────────
     const filterBtns = document.querySelectorAll('.btn[data-filter]');
     const cards = document.querySelectorAll('.item-card');
     filterBtns.forEach(btn => {
@@ -574,7 +569,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // Post modal image preview
+    // ── Post modal image preview ──────────────────────────────────────────────
     const postImgInput = document.getElementById('item_image');
     if (postImgInput) {
         postImgInput.addEventListener('change', function (e) {
@@ -593,7 +588,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // View Modal
+    // ── View Modal ────────────────────────────────────────────────────────────
     const viewModal = document.getElementById('viewItemModal');
     if (viewModal) {
         viewModal.addEventListener('show.bs.modal', function (event) {
@@ -647,17 +642,17 @@ document.addEventListener("DOMContentLoaded", function () {
                     statusBox.style.cssText = 'background-color:#D4E3DA;border-left:4px solid #0F6631;color:#0F6631;';
                     statusText.innerHTML = `
                         <div class="fw-bold mb-1" style="color:#0F6631;font-size:18px;">Surrendered to Lost &amp; Found Office</div>
-                        <p class="fw-light mb-2" style="color:#343A40;">This item has been turned over to the GNC Lost &amp; Found Management Office.</p>
-                        <div class="small">
-                            <strong>Office Hours:</strong> <span style="color:#343A40;font-weight:500;">Monday - Saturday, 8:00 AM - 5:00 PM</span><br>
-                            <strong>Location:</strong> <span style="color:#343A40;font-weight:500;">Main Building, Ground Floor</span>
+                        <p class="fw-light mb-2" style="color:#343A40;">This item has been turned over to the GNC Lost &amp; Found Management Office. Please visit the office during business hours to claim your item.</p>
+                        <div class="small" style="color:#343A40;">
+                            <strong>Office Hours:</strong> <span style="font-weight:300;">Monday - Saturday, 8:00 AM - 5:00 PM</span><br>
+                            <strong>Location:</strong> <span style="font-weight:300;">Main Building, Ground Floor</span>
                         </div>`;
                 }
             }
         });
     }
 
-    // Edit Modal
+    // ── Edit Modal ────────────────────────────────────────────────────────────
     const editModal = document.getElementById('editItemModal');
     if (editModal) {
         editModal.addEventListener('show.bs.modal', function (event) {
@@ -669,7 +664,6 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('edit_date').value           = btn.dataset.date;
             document.getElementById('edit_time').value           = btn.dataset.time;
             document.getElementById('edit_desc').value           = btn.dataset.desc;
-            document.getElementById('edit_notes').value          = btn.dataset.notes;
             document.getElementById('edit_email').value          = btn.dataset.email;
             document.getElementById('edit_phone').value          = btn.dataset.phone;
             document.getElementById('edit_submitted_to_office').checked =
@@ -679,6 +673,9 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById(
                 type && type.toLowerCase() === 'found' ? 'editTypeFound' : 'editTypeLost'
             ).checked = true;
+
+            // Update checkbox visibility based on loaded type
+            toggleOfficeElements('edit', type);
 
             const img         = btn.dataset.img;
             const previewImg  = document.getElementById('edit-image-preview');
@@ -711,6 +708,47 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
     }
+
+    // ── Checkbox visibility helper ────────────────────────────────────────────
+    // prefix = 'post' | 'edit'
+    function toggleOfficeElements(prefix, typeValue) {
+        const isLost = typeValue === 'Lost';
+        const checkboxSection = document.getElementById(prefix === 'post' ? 'post-checkbox-section' : 'edit-checkbox-section');
+        const checkboxDesc    = document.getElementById(prefix === 'post' ? 'post-checkbox-desc'    : 'edit-checkbox-desc');
+        const hr              = document.getElementById(prefix === 'post' ? 'post-office-hr'        : 'edit-office-hr');
+
+        [checkboxSection, checkboxDesc, hr].forEach(el => {
+            if (el) el.style.display = isLost ? 'none' : '';
+        });
+    }
+
+    // POST modal — hide on load because "Lost" is checked by default
+    const defaultPostType = document.querySelector('#postItemModal input[name="post_type"]:checked');
+    if (defaultPostType) toggleOfficeElements('post', defaultPostType.value);
+
+    // POST modal — update on change
+    document.querySelectorAll('#postItemModal input[name="post_type"]').forEach(radio => {
+        radio.addEventListener('change', function () {
+            toggleOfficeElements('post', this.value);
+        });
+    });
+
+    // EDIT modal — update on change
+    document.querySelectorAll('#editItemModal input[name="post_type"]').forEach(radio => {
+        radio.addEventListener('change', function () {
+            toggleOfficeElements('edit', this.value);
+        });
+    });
+
+    // Also hide when post modal is shown (reset state each open)
+    const postModal = document.getElementById('postItemModal');
+    if (postModal) {
+        postModal.addEventListener('show.bs.modal', function () {
+            const checked = document.querySelector('#postItemModal input[name="post_type"]:checked');
+            if (checked) toggleOfficeElements('post', checked.value);
+        });
+    }
+
 });
 </script>
 </body>

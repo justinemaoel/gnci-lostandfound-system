@@ -397,7 +397,7 @@ document.addEventListener('DOMContentLoaded', function () {
             icon:   'bi bi-info-circle-fill fs-5',
             color:  '#0F6631',
             title:  'Surrendered to Lost &amp; Found Office',
-            body:   'This item has been turned over to the GNC Lost &amp; Found Management Office. Please visit the office during business hours to claim your item.<br><br><strong>Office Hours:</strong> Monday - Saturday, 8:00 AM - 5:00 PM<br><strong>Location:</strong> Main Building, Ground Floor',
+            body:   'This item has been turned over to the GNC Lost &amp; Found Management Office. Please visit the office during business hours to claim your item.<br><br><strong style="font-weight: bold;">Office Hours:</strong> Monday - Saturday, 8:00 AM - 5:00 PM<br><strong style="font-weight: bold;">Location:</strong> Main Building, Ground Floor',
         },
     };
 

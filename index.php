@@ -70,7 +70,7 @@ $conn->close();
 </head>
 <body>
     <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg shadow-sm">
+    <nav class="navbar sticky-top navbar-expand-lg shadow-sm">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="#">
                 <img src="assets/images/GNC Logo.svg" alt="GNC Logo" width="50" height="50" class="me-2">
@@ -87,7 +87,7 @@ $conn->close();
                     <li class="nav-item"><a class="nav-link px-3" href="#footer">ABOUT</a></li>
                     <li class="nav-item"><a class="nav-link px-3" href="#items">BROWSE ITEMS</a></li>
                     <li class="nav-item ms-lg-3">
-                        <a id="login-register" class="nav-link px-4 py-2" href="auth/login.php">LOGIN / REGISTER</a>
+                        <a id="login-register" class="nav-link px-4 py-2" href="auth/login.php" target="_blank">LOGIN / REGISTER</a>
                     </li>
                 </ul>
             </div>
@@ -107,7 +107,7 @@ $conn->close();
                         lost items on campus.
                     </p>
                 <div class="d-flex flex-column flex-md-row gap-3 mt-4">
-                    <a href="auth/register.php" class="btn btn-light btn-lg px-4 py-3 fw-bold">Report Lost Items</a>
+                    <a href="auth/register.php" target="_blank" class="btn btn-light btn-lg px-4 py-3 fw-bold" style="color: #094624;">Report Lost Items</a>
                     <a href="#items" class="btn btn-outline-light btn-lg px-4 py-3 fw-bold">Browse Found Items</a>
                 </div>
                 </div>
