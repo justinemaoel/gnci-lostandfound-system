@@ -9,8 +9,10 @@ if ($conn->connect_error) {
     die('Connection failed: ' . $conn->connect_error);
 }
 
-$search     = isset($_GET['q'])      ? trim($_GET['q'])  : '';
-$filterType = isset($_GET['type'])   ? $_GET['type']     : 'all';
+require_once __DIR__ . '/includes/input.php';
+
+$search     = getGetString('q');
+$filterType = getAllowedEnum('type', ['all', 'lost', 'found'], 'all');
 
 $conditions = ["items.upload_status = 'approved'"];
 $params = [];

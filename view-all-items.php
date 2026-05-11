@@ -9,8 +9,10 @@ if ($conn->connect_error) {
     die('Connection failed: ' . $conn->connect_error);
 }
 
-$search     = trim($_GET['q'] ?? '');
-$filterType = $_GET['type'] ?? 'all';
+require_once __DIR__ . '/includes/input.php';
+
+$search     = getGetString('q');
+$filterType = getAllowedEnum('type', ['all', 'lost', 'found'], 'all');
 
 $conditions = ["items.upload_status = 'approved'"];
 $params     = [];
@@ -40,14 +42,12 @@ $sql = "SELECT items.*, categories.category_name,
         WHERE $where
         ORDER BY items.created_at DESC";
 
+$stmt = $conn->prepare($sql);
 if (!empty($params)) {
-    $stmt = $conn->prepare($sql);
     $stmt->bind_param($types, ...$params);
-    $stmt->execute();
-    $result = $stmt->get_result();
-} else {
-    $result = $conn->query($sql);
 }
+$stmt->execute();
+$result = $stmt->get_result();
 
 $items = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 $conn->close();
@@ -188,6 +188,7 @@ $conn->close();
                                             data-user="<?= htmlspecialchars($fullName) ?>"
                                             data-email="<?= htmlspecialchars($item['contact_email'] ?? 'N/A') ?>"
                                             data-phone="<?= htmlspecialchars($item['contact_num'] ?? 'N/A') ?>"
+                                            data-submitted-to-office="<?= !empty($item['submitted_to_office']) ? 'true' : 'false' ?>"
                                             data-status="<?= htmlspecialchars($item['item_resolved_status'] ?? 'not resolved') ?>">
                                         View Details
                                     </button>
@@ -291,18 +292,19 @@ $conn->close();
         viewModal.addEventListener('show.bs.modal', function (event) {
             const btn = event.relatedTarget;
 
-            const name   = btn.getAttribute('data-name');
-            const type   = btn.getAttribute('data-type');
-            const bclass = btn.getAttribute('data-badge-class');
-            const cat    = btn.getAttribute('data-category');
-            const loc    = btn.getAttribute('data-location');
-            const date   = btn.getAttribute('data-date');
-            const time   = btn.getAttribute('data-time');
-            const desc   = btn.getAttribute('data-desc');
-            const img    = btn.getAttribute('data-img');
-            const user   = btn.getAttribute('data-user');
-            const email  = btn.getAttribute('data-email');
-            const phone  = btn.getAttribute('data-phone');
+            const name               = btn.getAttribute('data-name');
+            const type               = btn.getAttribute('data-type');
+            const bclass             = btn.getAttribute('data-badge-class');
+            const cat                = btn.getAttribute('data-category');
+            const loc                = btn.getAttribute('data-location');
+            const date               = btn.getAttribute('data-date');
+            const time               = btn.getAttribute('data-time');
+            const desc               = btn.getAttribute('data-desc');
+            const img                = btn.getAttribute('data-img');
+            const user               = btn.getAttribute('data-user');
+            const email              = btn.getAttribute('data-email');
+            const phone              = btn.getAttribute('data-phone');
+            const submittedToOffice  = btn.getAttribute('data-submitted-to-office') === 'true';
 
             // Fields
             document.getElementById('v-name').textContent   = name;
@@ -340,7 +342,7 @@ $conn->close();
                     <div class="fw-bold mb-1">Someone is looking for this item</div>
                     <div class="fw-light">If you have found this item, please contact the owner using the information provided.</div>
                 `;
-            } else {
+            } else if (submittedToOffice) {
                 statusBox.className      = 'alert alert-success d-flex align-items-start gap-2 border-0 rounded-3';
                 statusIcon.className     = 'bi bi-info-circle-fill fs-5';
                 statusIcon.style.color   = '#0A3634';
@@ -351,6 +353,14 @@ $conn->close();
                         <strong>Office Hours:</strong> Monday – Saturday, 8:00 AM – 5:00 PM<br>
                         <strong>Location:</strong> Main Building, Ground Floor
                     </div>
+                `;
+            } else {
+                statusBox.className      = 'alert alert-warning d-flex align-items-start gap-2 border-0 rounded-3';
+                statusIcon.className     = 'bi bi-exclamation-circle-fill fs-5';
+                statusIcon.style.color   = '#856404';
+                statusText.innerHTML     = `
+                    <div class="fw-bold mb-1" style="color:#856404;">Currently Held by Finder</div>
+                    <div class="fw-light">The person who found this item is currently holding it. You can contact them directly using the information below.</div>
                 `;
             }
         });
