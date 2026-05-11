@@ -39,7 +39,7 @@ $desc                = $_POST['desc'];
 $notes               = $_POST['notes'] ?? '';
 $submitted_to_office = isset($_POST['submitted_to_office']) ? 1 : 0;
 $contact_email       = $_POST['email'] ?? '';
-$contact_phone       = $_POST['phone'] ?? '';
+$contact_num       = $_POST['phone'] ?? '';
 
 // 2. Manage Images
 if ($is_admin) {
@@ -92,7 +92,7 @@ if ($is_admin) {
     $params = [
         $post_type, $item_name, $category_id, $location_input,
         $datetime, $desc, $notes, $filename,
-        $contact_email, $contact_phone, $submitted_to_office,
+        $contact_email, $contact_num, $submitted_to_office,
         $item_id
     ];
 } else {
@@ -113,7 +113,7 @@ if ($is_admin) {
     $params = [
         $post_type, $item_name, $category_id, $location_input,
         $datetime, $desc, $notes, $filename,
-        $contact_email, $contact_phone, $submitted_to_office,
+        $contact_email, $contact_num, $submitted_to_office,
         $item_id, $user_id
     ];
 }
