@@ -29,8 +29,9 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
         $stmt = $pdo->prepare("UPDATE items SET upload_status = ?, status = ? WHERE id = ?");
         $stmt->execute([$statusParam, $statusParam, $id]);
 
-        // Redirect to landing/index after approval
-        header("Location: ../index.php?success=approved");
+        // Redirect back to admin dashboard
+        $redirect = isset($_GET['redirect']) ? $_GET['redirect'] : 'pending';
+        header("Location: ../admin-dash.php?tab={$redirect}&success=approved");
         exit();
     }
 

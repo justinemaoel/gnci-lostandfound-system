@@ -72,7 +72,7 @@ $conn->close();
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="#">
                 <img src="assets/images/GNC Logo.svg" alt="GNC Logo" width="50" height="50" class="me-2">
-                <div class="brand-text">
+                <div class="brand-text d-none d-md-block">
                     <span class="fw-bold d-block lh-1">Guagua National Colleges</span>
                     <small class="d-block">Lost & Found</small>
                 </div>

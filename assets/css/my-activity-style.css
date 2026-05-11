@@ -1,0 +1,105 @@
+.user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.active-filter { background-color: #157347 !important; color: white !important; }
+
+.item-card {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    margin-bottom: 0 !important;
+}
+
+/* ── Mobile: vertical card layout ── */
+@media (max-width: 767.98px) {
+
+    main.col-md-9 {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
+    /* Force card inner wrapper to go vertical */
+    .item-card > .d-flex {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        padding: 0 !important;
+    }
+
+    /* Image: full width, no margin, square-ish */
+    .item-card > .d-flex > .rounded-3 {
+        width: 100% !important;
+        height: 180px !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        flex-shrink: 0 !important;
+    }
+
+    .item-card > .d-flex > .rounded-3 img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+    }
+
+    /* Details section */
+    .item-card > .d-flex > .flex-grow-1 {
+        padding: 12px 14px 8px !important;
+        width: 100% !important;
+    }
+
+    /* Buttons row */
+    .item-card > .d-flex > .d-flex.gap-2 {
+        flex-direction: row !important;
+        flex-shrink: unset !important;
+        padding: 8px 12px 12px !important;
+        border-top: 1px solid #f0f0f0;
+        width: 100% !important;
+        gap: 6px !important;
+    }
+
+    .item-card > .d-flex > .d-flex.gap-2 .btn,
+    .item-card > .d-flex > .d-flex.gap-2 form {
+        flex: 1 !important;
+    }
+
+    .item-card > .d-flex > .d-flex.gap-2 form .btn {
+        width: 100% !important;
+    }
+
+    .item-card > .d-flex > .d-flex.gap-2 .btn {
+        font-size: 0.78rem !important;
+        padding: 6px 4px !important;
+        text-align: center !important;
+    }
+
+    /* Header: stack title and button */
+    .d-flex.justify-content-between.align-items-center.pt-4 {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    /* Filter pills: stretch full width */
+    .mb-4 > .d-inline-flex {
+        display: flex !important;
+        width: 100% !important;
+    }
+
+    .mb-4 > .d-inline-flex .btn {
+        flex: 1 !important;
+        font-size: 0.78rem !important;
+        padding: 6px 8px !important;
+        white-space: nowrap;
+    }
+}
+
+/* ── Desktop sidebar ── */
+@media (min-width: 768px) {
+    #sidebarMenu {
+        position: sticky;
+        top: 72px;
+        height: calc(100vh - 72px) !important;
+    }
+    .offcanvas-body {
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+}

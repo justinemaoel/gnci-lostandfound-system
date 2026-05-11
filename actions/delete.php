@@ -1,36 +1,38 @@
 <?php
 // actions/delete.php
 session_start();
-require_once __DIR__ . '/../includes/db.php'; // Using safe absolute pathing
+require_once __DIR__ . '/../includes/db.php';
 
-// 1. Security Check: Is the user logged in and did they actually click delete?
+// 1. Security Check
 if (!isset($_SESSION['user_id']) || !isset($_POST['item_id'])) {
     header("Location: ../user-dash.php");
     exit();
 }
 
-$item_id = (int) $_POST['item_id'];
-$user_id = $_SESSION['user_id'];
-$role    = $_SESSION['role'] ?? 'student';
+$item_id  = (int) $_POST['item_id'];
+$user_id  = $_SESSION['user_id'];
+$role     = $_SESSION['role'] ?? 'student';
 
-// 2. Verify Ownership: Can this user actually delete this item?
-// Converted to PDO prepare/execute block
+// Determine redirect base based on role
+$redirect_base = ($role === 'admin') ? '../admin-dash.php' : '../user-dash.php';
+
+// 2. Verify Ownership
 $check = $pdo->prepare("SELECT user_id, item_img FROM items WHERE id = ?");
 $check->execute([$item_id]);
 $row = $check->fetch(PDO::FETCH_ASSOC);
 
 if (!$row) {
-    header("Location: ../user-dash.php?error=notfound");
+    header("Location: {$redirect_base}?error=notfound");
     exit();
 }
 
-// Check if the user owns the post OR if they are an admin
+// Allow if owner OR admin
 if ((int)$row['user_id'] !== (int)$user_id && $role !== 'admin') {
-    header("Location: ../user-dash.php?error=unauthorized");
+    header("Location: {$redirect_base}?error=unauthorized");
     exit();
 }
 
-// 3. Cleanup: Delete the image file from the server
+// 3. Cleanup: Delete image file
 if (!empty($row['item_img'])) {
     $img_path = __DIR__ . "/../uploads/" . $row['item_img'];
     if (file_exists($img_path)) {
@@ -38,17 +40,14 @@ if (!empty($row['item_img'])) {
     }
 }
 
-// 4. Execution: Remove the record from the database
-// Converted to PDO prepare/execute block
-$stmt = $pdo->prepare("DELETE FROM items WHERE id = ?");
+// 4. Delete from database
+$stmt    = $pdo->prepare("DELETE FROM items WHERE id = ?");
 $success = $stmt->execute([$item_id]);
 
 if ($success) {
-    // Redirect with success message
-    header("Location: ../user-dash.php?success=deleted");
+    header("Location: {$redirect_base}?success=deleted");
 } else {
-    // Redirect with error message
-    header("Location: ../user-dash.php?error=db_error");
+    header("Location: {$redirect_base}?error=db_error");
 }
 exit();
 ?>

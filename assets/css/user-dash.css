@@ -1,19 +1,189 @@
-.user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-.active-filter { background-color: #157347 !important; color: white !important; }
-
-.item-card {
-    margin-bottom: 0 !important;
+/* ─── Base ─────────────────────────────────────────── */
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
+.active-filter {
+    background-color: #157347 !important;
+    color: white !important;
+}
+
+#v-status-box i {
+    color: inherit !important;
+    font-size: 1.1rem;
+    margin-top: 0.1rem;
+}
+
+/* Filter pills scrollable */
+.filter-scroll-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+}
+.filter-scroll-wrapper::-webkit-scrollbar { display: none; }
+.filter-scroll-wrapper .d-inline-flex {
+    white-space: nowrap;
+    min-width: max-content;
+}
+
+/* ─── Item Card base ────────────────────────────────── */
+.item-card {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    transition: box-shadow 0.2s ease;
+}
+.item-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+}
+
+/* ═══════════════════════════════════════════════════
+    DESKTOP  (>= 768 px)
+    horizontal: thumb | details | action buttons
+    ═══════════════════════════════════════════════════ */
 @media (min-width: 768px) {
+
+    /* Sidebar sticky */
     #sidebarMenu {
         position: sticky;
-        top: 72px; 
+        top: 72px;
         height: calc(100vh - 72px) !important;
     }
     .offcanvas-body {
         height: 100% !important;
         display: flex !important;
         flex-direction: column !important;
+    }
+
+    .item-card { padding: 1rem 1.25rem; }
+
+    .item-card .card-top-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .item-card .card-thumb {
+        width: 120px !important;
+        height: 100px !important;
+        flex-shrink: 0;
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+    }
+    .item-card .card-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .item-card .card-details {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* Show desktop actions, hide mobile strip */
+    .card-actions-desktop { display: flex !important; }
+    .card-actions-mobile  { display: none  !important; }
+}
+
+/* ═══════════════════════════════════════════════════
+    MOBILE  (< 768 px)
+    vertical: full-width image → details → button row
+    ═══════════════════════════════════════════════════ */
+@media (max-width: 767.98px) {
+
+    /* Header stacks */
+    .posts-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.75rem;
+    }
+    .posts-header .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Card = vertical flex column */
+    .item-card {
+        padding: 0 !important;
+        display: flex;
+        flex-direction: column;
+        border-radius: 12px;
+        width: 100% !important;
+        height: 350px !important;
+    }
+    .item-card .card-top-row {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Full-width image on top */
+    .item-card .card-thumb {
+        width: 100% !important;
+        height: 170px !important;
+        border-radius: 0 !important;
+        flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
+    }
+    .item-card .card-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    /* Details block below image */
+    .item-card .card-details {
+        padding: 0.75rem 0.9rem 0.6rem !important;
+    }
+    .item-card .card-details h5 {
+        font-size: 0.92rem;
+        word-break: break-word;
+    }
+
+    /* Hide desktop inline action buttons */
+    .card-actions-desktop { display: none !important; }
+
+    /* Mobile action strip: 3 equal columns, flat border-top */
+    .card-actions-mobile {
+        display: flex !important;
+        border-top: 1px solid #e9ecef;
+    }
+    .card-actions-mobile .btn,
+    .card-actions-mobile form {
+        flex: 1;
+        margin: 0;
+        border-radius: 0;
+        border: none;
+        border-right: 1px solid #e9ecef;
+    }
+    .card-actions-mobile form:last-child {
+        border-right: none;
+    }
+    .card-actions-mobile form .btn {
+        width: 100%;
+        border-radius: 0;
+        border: none;
+    }
+    .card-actions-mobile .btn {
+        font-size: 0.78rem;
+        padding: 0.5rem 0.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+
+    /* Modal full-width on mobile */
+    .modal-dialog {
+        max-width: calc(100% - 1rem) !important;
+        margin: 0.5rem auto;
     }
 }
