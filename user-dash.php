@@ -274,7 +274,10 @@ $item_count = count($items);
     </div>
 </div>
 
-<!-- POST ITEM MODAL -->
+
+<!-- ══════════════════════════════════════════════
+     POST ITEM MODAL
+══════════════════════════════════════════════ -->
 <div class="modal fade" id="postItemModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 rounded-0 shadow-lg">
@@ -356,15 +359,15 @@ $item_count = count($items);
                                 </div>
                                 <p class="small text-muted mb-0 ms-4" id="post-checkbox-desc">Check this if you've already turned the item over to the office.</p>
                                 <hr id="post-office-hr" style="border-top:2px solid #5a8f6f; margin:14px 0;">
-                                <p class="small mb-3" style="color:#666;">Contact information for this item</p>
+                                <p class="small mb-3" id="post-contact-label" style="color:#666;">Your Contact Information (so we can reach you if your item is found):</p>
                                 <div class="row g-3">
                                     <div class="col-sm-6">
                                         <label class="fw-bold mb-1 small">Email Address <span class="post-contact-required">*</span></label>
-                                        <input type="email" name="email" id="post_email" class="form-control" style="background:#D2CECE; border:1px solid #999;">
+                                        <input type="email" name="email" id="post_email" class="form-control" style="background:#D2CECE; border:1px solid #999;" required>
                                     </div>
                                     <div class="col-sm-6">
                                         <label class="fw-bold mb-1 small">Phone Number <span class="post-contact-required">*</span></label>
-                                        <input type="text" name="phone" id="post_phone" class="form-control" style="background:#D2CECE; border:1px solid #999;">
+                                        <input type="text" name="phone" id="post_phone" class="form-control" style="background:#D2CECE; border:1px solid #999;" required>
                                     </div>
                                 </div>
                             </div>
@@ -380,7 +383,10 @@ $item_count = count($items);
     </div>
 </div>
 
-<!-- VIEW MODAL -->
+
+<!-- ══════════════════════════════════════════════
+     VIEW MODAL
+══════════════════════════════════════════════ -->
 <div class="modal fade" id="viewItemModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 rounded-4 shadow-lg p-3">
@@ -437,7 +443,10 @@ $item_count = count($items);
     </div>
 </div>
 
-<!-- EDIT ITEM MODAL -->
+
+<!-- ══════════════════════════════════════════════
+     EDIT ITEM MODAL
+══════════════════════════════════════════════ -->
 <div class="modal fade" id="editItemModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 rounded-0 shadow-lg">
@@ -521,15 +530,15 @@ $item_count = count($items);
                                 </div>
                                 <p class="small text-muted mb-0 ms-4" id="edit-checkbox-desc">Check this if you've already turned the item over to the office.</p>
                                 <hr id="edit-office-hr" style="border-top:2px solid #5a8f6f; margin:14px 0;">
-                                <p class="small mb-3" style="color:#666;">Contact information for this item</p>
+                                <p class="small mb-3" id="edit-contact-label" style="color:#666;">Since you're holding the item, please provide your contact information</p>
                                 <div class="row g-3">
                                     <div class="col-sm-6">
                                         <label class="fw-bold mb-1 small">Email Address <span class="edit-contact-required">*</span></label>
-                                        <input type="email" name="email" id="edit_email" class="form-control" style="background:#D2CECE; border:1px solid #999;">
+                                        <input type="email" name="email" id="edit_email" class="form-control" style="background:#D2CECE; border:1px solid #999;" required>
                                     </div>
                                     <div class="col-sm-6">
                                         <label class="fw-bold mb-1 small">Phone Number <span class="edit-contact-required">*</span></label>
-                                        <input type="text" name="phone" id="edit_phone" class="form-control" style="background:#D2CECE; border:1px solid #999;">
+                                        <input type="text" name="phone" id="edit_phone" class="form-control" style="background:#D2CECE; border:1px solid #999;" required>
                                     </div>
                                 </div>
                             </div>
@@ -545,53 +554,44 @@ $item_count = count($items);
     </div>
 </div>
 
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    // ── Helper: toggle required on email/phone ────────────────────────────────
-    function updateContactRequired(prefix) {
-        const isPost  = prefix === 'post';
-        const modalId = isPost ? 'postItemModal' : 'editItemModal';
-        const typeEl  = document.querySelector('#' + modalId + ' input[name="post_type"]:checked');
-        const typeVal = typeEl ? typeEl.value : 'Lost';
-        const isLost  = typeVal === 'Lost';
+    // ── Label text constants ──────────────────────────────────────────────────
+    const LABEL_LOST  = 'Your Contact Information (so we can reach you if your item is found):';
+    const LABEL_FOUND = "Since you're holding the item, please provide your contact information";
 
-        const emailEl    = document.getElementById(isPost ? 'post_email'              : 'edit_email');
-        const phoneEl    = document.getElementById(isPost ? 'post_phone'              : 'edit_phone');
-        const cbEl       = document.getElementById(isPost ? 'submitted_to_office'     : 'edit_submitted_to_office');
-        const reqStars   = document.querySelectorAll('.' + (isPost ? 'post' : 'edit') + '-contact-required');
+    // ── Helper: toggle email/phone disabled + required ────────────────────────
+    function toggleContactFields(emailId, phoneId, disabled) {
+        const email = document.getElementById(emailId);
+        const phone = document.getElementById(phoneId);
+        if (!email || !phone) return;
 
-        if (!emailEl || !phoneEl) return;
-
-        let shouldRequire;
-        if (isLost) {
-            // Lost: always require contact fields
-            shouldRequire = true;
+        if (disabled) {
+            email.removeAttribute('required');
+            phone.removeAttribute('required');
+            email.setAttribute('disabled', 'disabled');
+            phone.setAttribute('disabled', 'disabled');
+            email.value = '';
+            phone.value = '';
         } else {
-            // Found: require only when checkbox is NOT checked
-            shouldRequire = cbEl ? !cbEl.checked : true;
+            email.setAttribute('required', 'required');
+            phone.setAttribute('required', 'required');
+            email.removeAttribute('disabled');
+            phone.removeAttribute('disabled');
         }
-
-        emailEl.required = shouldRequire;
-        phoneEl.required = shouldRequire;
-
-        // Update placeholder hint
-        if (!isLost && cbEl && cbEl.checked) {
-            emailEl.placeholder = 'Optional — item is at the office';
-            phoneEl.placeholder = 'Optional — item is at the office';
-        } else {
-            emailEl.placeholder = '';
-            phoneEl.placeholder = '';
-        }
-
-        // Show/hide the * asterisk on labels
-        reqStars.forEach(el => {
-            el.style.display = shouldRequire ? '' : 'none';
-        });
     }
 
-    // ── Helper: toggle office checkbox visibility ─────────────────────────────
+    // ── Helper: update the descriptive label above email/phone ───────────────
+    function updateContactLabel(prefix, typeValue) {
+        const labelEl = document.getElementById(prefix === 'post' ? 'post-contact-label' : 'edit-contact-label');
+        if (!labelEl) return;
+        labelEl.textContent = typeValue === 'Lost' ? LABEL_LOST : LABEL_FOUND;
+    }
+
+    // ── Helper: toggle office checkbox/desc/hr visibility ────────────────────
     function toggleOfficeElements(prefix, typeValue) {
         const isLost = typeValue === 'Lost';
         const isPost = prefix === 'post';
@@ -602,6 +602,32 @@ document.addEventListener("DOMContentLoaded", function () {
         [checkboxSection, checkboxDesc, hr].forEach(el => {
             if (el) el.style.display = isLost ? 'none' : '';
         });
+    }
+
+    // ── Combined: run all helpers at once ─────────────────────────────────────
+    function updateAll(prefix, typeValue) {
+        const isLost = typeValue === 'Lost';
+        const isPost = prefix === 'post';
+
+        toggleOfficeElements(prefix, typeValue);
+        updateContactLabel(prefix, typeValue);
+
+        if (isLost) {
+            // Lost: always enable contact fields (checkbox hidden)
+            toggleContactFields(
+                isPost ? 'post_email' : 'edit_email',
+                isPost ? 'post_phone' : 'edit_phone',
+                false
+            );
+        } else {
+            // Found: check current checkbox state
+            const cb = document.getElementById(isPost ? 'submitted_to_office' : 'edit_submitted_to_office');
+            toggleContactFields(
+                isPost ? 'post_email' : 'edit_email',
+                isPost ? 'post_phone' : 'edit_phone',
+                cb && cb.checked
+            );
+        }
     }
 
     // ── Filter logic ──────────────────────────────────────────────────────────
@@ -648,8 +674,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // ── POST modal — radio change ─────────────────────────────────────────────
     document.querySelectorAll('#postItemModal input[name="post_type"]').forEach(radio => {
         radio.addEventListener('change', function () {
-            toggleOfficeElements('post', this.value);
-            updateContactRequired('post');
+            updateAll('post', this.value);
         });
     });
 
@@ -657,7 +682,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const postCb = document.getElementById('submitted_to_office');
     if (postCb) {
         postCb.addEventListener('change', function () {
-            updateContactRequired('post');
+            toggleContactFields('post_email', 'post_phone', this.checked);
         });
     }
 
@@ -665,13 +690,19 @@ document.addEventListener("DOMContentLoaded", function () {
     const postModal = document.getElementById('postItemModal');
     if (postModal) {
         postModal.addEventListener('show.bs.modal', function () {
-            // Reset form state
             if (postCb) postCb.checked = false;
             const checked = document.querySelector('#postItemModal input[name="post_type"]:checked');
-            if (checked) {
-                toggleOfficeElements('post', checked.value);
-                updateContactRequired('post');
-            }
+            if (checked) updateAll('post', checked.value);
+        });
+        postModal.addEventListener('hidden.bs.modal', function () {
+            const preview     = document.getElementById('image-preview');
+            const placeholder = document.getElementById('upload-placeholder');
+            const input       = document.getElementById('item_image');
+            if (preview)     { preview.src = ''; preview.classList.add('d-none'); }
+            if (placeholder) { placeholder.classList.remove('d-none'); }
+            if (input)       { input.value = ''; }
+            if (postCb)      { postCb.checked = false; }
+            toggleContactFields('post_email', 'post_phone', false);
         });
     }
 
@@ -739,11 +770,12 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ── Edit Modal ────────────────────────────────────────────────────────────
+    // ── Edit Modal — populate fields on open ──────────────────────────────────
     const editModal = document.getElementById('editItemModal');
     if (editModal) {
         editModal.addEventListener('show.bs.modal', function (event) {
             const btn = event.relatedTarget;
+
             document.getElementById('edit_item_id').value        = btn.dataset.id;
             document.getElementById('edit_item_name').value      = btn.dataset.name;
             document.getElementById('edit_category_id').value    = btn.dataset.category;
@@ -751,19 +783,28 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('edit_date').value           = btn.dataset.date;
             document.getElementById('edit_time').value           = btn.dataset.time;
             document.getElementById('edit_desc').value           = btn.dataset.desc;
-            document.getElementById('edit_email').value          = btn.dataset.email;
-            document.getElementById('edit_phone').value          = btn.dataset.phone;
-            document.getElementById('edit_submitted_to_office').checked =
-                btn.dataset.submittedToOffice === 'true';
 
-            const type = btn.dataset.type;
+            const isSubmitted = btn.dataset.submittedToOffice === 'true';
+            const type        = btn.dataset.type || 'Lost';
+            const isLost      = type.toLowerCase() === 'lost';
+
+            document.getElementById('edit_submitted_to_office').checked = isSubmitted;
+
+            // Only pre-fill email/phone if fields will be enabled
+            if (!isSubmitted || isLost) {
+                document.getElementById('edit_email').value = btn.dataset.email || '';
+                document.getElementById('edit_phone').value = btn.dataset.phone || '';
+            }
+
+            // Set post type radio
             document.getElementById(
-                type && type.toLowerCase() === 'found' ? 'editTypeFound' : 'editTypeLost'
+                type.toLowerCase() === 'found' ? 'editTypeFound' : 'editTypeLost'
             ).checked = true;
 
-            toggleOfficeElements('edit', type);
-            updateContactRequired('edit');
+            // Apply all toggle logic
+            updateAll('edit', type);
 
+            // Image preview
             const img         = btn.dataset.img;
             const previewImg  = document.getElementById('edit-image-preview');
             const placeholder = document.getElementById('edit-upload-placeholder');
@@ -800,8 +841,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // ── EDIT modal — radio change ─────────────────────────────────────────────
     document.querySelectorAll('#editItemModal input[name="post_type"]').forEach(radio => {
         radio.addEventListener('change', function () {
-            toggleOfficeElements('edit', this.value);
-            updateContactRequired('edit');
+            updateAll('edit', this.value);
         });
     });
 
@@ -809,7 +849,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const editCb = document.getElementById('edit_submitted_to_office');
     if (editCb) {
         editCb.addEventListener('change', function () {
-            updateContactRequired('edit');
+            toggleContactFields('edit_email', 'edit_phone', this.checked);
         });
     }
 

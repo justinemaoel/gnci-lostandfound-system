@@ -410,15 +410,15 @@ $categories = $pdo->query("SELECT id, category_name FROM categories ORDER BY cat
                                 </div>
                                 <p class="small text-muted mb-0 ms-4" id="admin-post-checkbox-desc">Check this if you've already turned the item over to the office.</p>
                                 <hr id="admin-post-office-hr" style="border-top:2px solid #5a8f6f;margin:14px 0;">
-                                <p class="small mb-3" style="color:#666;">Contact information for this item</p>
+                                <p class="small mb-3" id="admin-post-contact-label" style="color:#666;">Contact information for this item</p>
                                 <div class="row g-3">
                                     <div class="col-sm-6">
                                         <label class="fw-bold mb-1 small">Email Address *</label>
-                                        <input type="email" name="email" class="form-control" style="background:#D2CECE;border:1px solid #999;" required>
+                                        <input type="email" name="email" id="admin_post_email" class="form-control" style="background:#D2CECE;border:1px solid #999;" required>
                                     </div>
                                     <div class="col-sm-6">
                                         <label class="fw-bold mb-1 small">Phone Number *</label>
-                                        <input type="text" name="phone" class="form-control" style="background:#D2CECE;border:1px solid #999;" required>
+                                        <input type="text" name="phone" id="admin_post_phone" class="form-control" style="background:#D2CECE;border:1px solid #999;" required>
                                     </div>
                                 </div>
                             </div>
@@ -518,7 +518,7 @@ $categories = $pdo->query("SELECT id, category_name FROM categories ORDER BY cat
                                 </div>
                                 <p class="small text-muted mb-0 ms-4" id="admin-edit-checkbox-desc">Check this if you've already turned the item over to the office.</p>
                                 <hr id="admin-edit-office-hr" style="border-top:2px solid #5a8f6f;margin:14px 0;">
-                                <p class="small mb-3" style="color:#666;">Contact information for this item</p>
+                                <p class="small mb-3" id="admin-edit-contact-label" style="color:#666;">Contact information for this item</p>
                                 <div class="row g-3">
                                     <div class="col-sm-6">
                                         <label class="fw-bold mb-1 small">Email Address *</label>
@@ -623,6 +623,38 @@ document.addEventListener('DOMContentLoaded', function () {
         navAvatar.src = 'https://ui-avatars.com/api/?name=' + navAvatar.dataset.name + '&background=0b5a30&color=fff';
     }
 
+    // ── Toggle contact fields required/disabled based on checkbox ─────────────
+    function toggleContactFields(emailId, phoneId, disabled) {
+        const email = document.getElementById(emailId);
+        const phone = document.getElementById(phoneId);
+        if (!email || !phone) return;
+
+        if (disabled) {
+            email.removeAttribute('required');
+            phone.removeAttribute('required');
+            email.setAttribute('disabled', 'disabled');
+            phone.setAttribute('disabled', 'disabled');
+            email.value = '';
+            phone.value = '';
+        } else {
+            email.setAttribute('required', 'required');
+            phone.setAttribute('required', 'required');
+            email.removeAttribute('disabled');
+            phone.removeAttribute('disabled');
+        }
+    }
+
+    // ── Update contact label text based on post type ───────────────────────────
+    function updateContactLabel(labelId, postType) {
+        const label = document.getElementById(labelId);
+        if (!label) return;
+        if ((postType || '').toLowerCase() === 'lost') {
+            label.textContent = 'Your Contact Information (so we can reach you if your item is found):';
+        } else {
+            label.textContent = 'Contact information for this item';
+        }
+    }
+
     // ── Helper: show/hide checkbox + desc + hr based on post type ─────────────
     function toggleOfficeElements(prefix, typeValue) {
         const isLost = typeValue === 'Lost';
@@ -634,6 +666,30 @@ document.addEventListener('DOMContentLoaded', function () {
             const el = document.getElementById(id);
             if (el) el.style.display = isLost ? 'none' : '';
         });
+
+        if (prefix === 'post') {
+            updateContactLabel('admin-post-contact-label', typeValue);
+            if (isLost) {
+                // Lost: always enable fields (no checkbox visible)
+                toggleContactFields('admin_post_email', 'admin_post_phone', false);
+            } else {
+                // Found: check current checkbox state
+                const cb = document.getElementById('admin_submitted_to_office');
+                toggleContactFields('admin_post_email', 'admin_post_phone', cb && cb.checked);
+            }
+        }
+
+        if (prefix === 'edit') {
+            updateContactLabel('admin-edit-contact-label', typeValue);
+            if (isLost) {
+                // Lost: always enable fields (no checkbox visible)
+                toggleContactFields('admin_edit_email', 'admin_edit_phone', false);
+            } else {
+                // Found: check current checkbox state
+                const cb = document.getElementById('admin_edit_submitted_to_office');
+                toggleContactFields('admin_edit_email', 'admin_edit_phone', cb && cb.checked);
+            }
+        }
     }
 
     // ── POST MODAL ────────────────────────────────────────────────────────────
@@ -650,11 +706,24 @@ document.addEventListener('DOMContentLoaded', function () {
             if (preview)     { preview.src = ''; preview.classList.add('d-none'); }
             if (placeholder) { placeholder.classList.remove('d-none'); }
             if (input)       { input.value = ''; }
+            // Reset checkbox
+            const cb = document.getElementById('admin_submitted_to_office');
+            if (cb) cb.checked = false;
+            toggleContactFields('admin_post_email', 'admin_post_phone', false);
         });
         document.querySelectorAll('#postItemModal input[name="post_type"]').forEach(function (r) {
             r.addEventListener('change', function () { toggleOfficeElements('post', this.value); });
         });
+
+        // Checkbox toggle for POST modal
+        const postCb = document.getElementById('admin_submitted_to_office');
+        if (postCb) {
+            postCb.addEventListener('change', function () {
+                toggleContactFields('admin_post_email', 'admin_post_phone', this.checked);
+            });
+        }
     }
+
     // Run once on load (Lost is default-checked)
     const defaultPostType = document.querySelector('#postItemModal input[name="post_type"]:checked');
     if (defaultPostType) toggleOfficeElements('post', defaultPostType.value);
@@ -687,14 +756,22 @@ document.addEventListener('DOMContentLoaded', function () {
             try { item = JSON.parse(btn.getAttribute('data-item')); }
             catch (e) { console.error('Failed to parse item JSON', e); return; }
 
-            document.getElementById('admin_edit_item_id').value      = item.id            || '';
-            document.getElementById('admin_edit_item_name').value    = item.item_name     || '';
-            document.getElementById('admin_edit_category_id').value  = item.category_id  || '';
-            document.getElementById('admin_edit_location').value     = item.location_text || '';
-            document.getElementById('admin_edit_desc').value         = item.description   || '';
-            document.getElementById('admin_edit_email').value        = item.contact_email || '';
-            document.getElementById('admin_edit_phone').value        = item.contact_num   || '';
-            document.getElementById('admin_edit_submitted_to_office').checked = !!parseInt(item.submitted_to_office);
+            document.getElementById('admin_edit_item_id').value     = item.id            || '';
+            document.getElementById('admin_edit_item_name').value   = item.item_name     || '';
+            document.getElementById('admin_edit_category_id').value = item.category_id  || '';
+            document.getElementById('admin_edit_location').value    = item.location_text || '';
+            document.getElementById('admin_edit_desc').value        = item.description   || '';
+
+            const isSubmitted = !!parseInt(item.submitted_to_office);
+            const isLostItem  = (item.post_type || '').toLowerCase() === 'lost';
+
+            document.getElementById('admin_edit_submitted_to_office').checked = isSubmitted;
+
+            // Only populate email/phone if fields will be enabled
+            if (!isSubmitted || isLostItem) {
+                document.getElementById('admin_edit_email').value = item.contact_email || '';
+                document.getElementById('admin_edit_phone').value = item.contact_num   || '';
+            }
 
             if (item.date_reported) {
                 document.getElementById('admin_edit_date').value = item.date_reported.substring(0, 10);
@@ -704,8 +781,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             // Post type radio
-            const typeId = (item.post_type || '').toLowerCase() === 'found' ? 'adminEditTypeFound' : 'adminEditTypeLost';
+            const typeId = isLostItem ? 'adminEditTypeLost' : 'adminEditTypeFound';
             document.getElementById(typeId).checked = true;
+
+            // Apply all toggle logic (office elements + contact fields + label)
             toggleOfficeElements('edit', item.post_type || 'Lost');
 
             // Image preview
@@ -724,6 +803,14 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('#adminEditItemModal input[name="post_type"]').forEach(function (r) {
             r.addEventListener('change', function () { toggleOfficeElements('edit', this.value); });
         });
+
+        // Checkbox toggle for EDIT modal
+        const editCb = document.getElementById('admin_edit_submitted_to_office');
+        if (editCb) {
+            editCb.addEventListener('change', function () {
+                toggleContactFields('admin_edit_email', 'admin_edit_phone', this.checked);
+            });
+        }
 
         const editImgInput = document.getElementById('admin_edit_item_image');
         if (editImgInput) {
@@ -818,7 +905,6 @@ document.addEventListener('DOMContentLoaded', function () {
         statusIcon.className            = cfg.icon;
         statusIcon.style.color          = cfg.color;
 
-        // ── FIX: render hours and location if present ──────────────────────
         statusText.innerHTML = `<div class="fw-bold mb-1" style="color:${cfg.color};font-size:18px;">${cfg.title}</div>`
                              + `<div class="fw-light" style="color:#343A40;">${cfg.body}</div>`
                              + (cfg.hours    ? `<div class="mt-2 small"><strong>Office Hours:</strong> ${cfg.hours}</div>`       : '')
