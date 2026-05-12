@@ -346,6 +346,7 @@ $item_count = count($items);
                                     </button>
                                 </div>
                             </div>
+
                             <div class="mt-auto p-3 rounded-3" id="post-office-box" style="background-color:#d1e7dd; border:2px solid #5a8f6f;">
                                 <div class="form-check mb-2" id="post-checkbox-section">
                                     <input class="form-check-input" type="checkbox" name="submitted_to_office" id="submitted_to_office" style="width:20px; height:20px;">
@@ -358,12 +359,12 @@ $item_count = count($items);
                                 <p class="small mb-3" style="color:#666;">Contact information for this item</p>
                                 <div class="row g-3">
                                     <div class="col-sm-6">
-                                        <label class="fw-bold mb-1 small">Email Address *</label>
-                                        <input type="email" name="email" class="form-control" style="background:#D2CECE; border:1px solid #999;" required>
+                                        <label class="fw-bold mb-1 small">Email Address <span class="post-contact-required">*</span></label>
+                                        <input type="email" name="email" id="post_email" class="form-control" style="background:#D2CECE; border:1px solid #999;">
                                     </div>
                                     <div class="col-sm-6">
-                                        <label class="fw-bold mb-1 small">Phone Number *</label>
-                                        <input type="text" name="phone" class="form-control" style="background:#D2CECE; border:1px solid #999;" required>
+                                        <label class="fw-bold mb-1 small">Phone Number <span class="post-contact-required">*</span></label>
+                                        <input type="text" name="phone" id="post_phone" class="form-control" style="background:#D2CECE; border:1px solid #999;">
                                     </div>
                                 </div>
                             </div>
@@ -510,6 +511,7 @@ $item_count = count($items);
                                     </button>
                                 </div>
                             </div>
+
                             <div class="mt-auto p-3 rounded-3" id="edit-office-box" style="background-color:#d1e7dd; border:2px solid #5a8f6f;">
                                 <div class="form-check mb-2" id="edit-checkbox-section">
                                     <input class="form-check-input" type="checkbox" name="submitted_to_office" id="edit_submitted_to_office" style="width:20px; height:20px;">
@@ -522,12 +524,12 @@ $item_count = count($items);
                                 <p class="small mb-3" style="color:#666;">Contact information for this item</p>
                                 <div class="row g-3">
                                     <div class="col-sm-6">
-                                        <label class="fw-bold mb-1 small">Email Address *</label>
-                                        <input type="email" name="email" id="edit_email" class="form-control" style="background:#D2CECE; border:1px solid #999;" required>
+                                        <label class="fw-bold mb-1 small">Email Address <span class="edit-contact-required">*</span></label>
+                                        <input type="email" name="email" id="edit_email" class="form-control" style="background:#D2CECE; border:1px solid #999;">
                                     </div>
                                     <div class="col-sm-6">
-                                        <label class="fw-bold mb-1 small">Phone Number *</label>
-                                        <input type="text" name="phone" id="edit_phone" class="form-control" style="background:#D2CECE; border:1px solid #999;" required>
+                                        <label class="fw-bold mb-1 small">Phone Number <span class="edit-contact-required">*</span></label>
+                                        <input type="text" name="phone" id="edit_phone" class="form-control" style="background:#D2CECE; border:1px solid #999;">
                                     </div>
                                 </div>
                             </div>
@@ -547,9 +549,64 @@ $item_count = count($items);
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
+    // ── Helper: toggle required on email/phone ────────────────────────────────
+    function updateContactRequired(prefix) {
+        const isPost  = prefix === 'post';
+        const modalId = isPost ? 'postItemModal' : 'editItemModal';
+        const typeEl  = document.querySelector('#' + modalId + ' input[name="post_type"]:checked');
+        const typeVal = typeEl ? typeEl.value : 'Lost';
+        const isLost  = typeVal === 'Lost';
+
+        const emailEl    = document.getElementById(isPost ? 'post_email'              : 'edit_email');
+        const phoneEl    = document.getElementById(isPost ? 'post_phone'              : 'edit_phone');
+        const cbEl       = document.getElementById(isPost ? 'submitted_to_office'     : 'edit_submitted_to_office');
+        const reqStars   = document.querySelectorAll('.' + (isPost ? 'post' : 'edit') + '-contact-required');
+
+        if (!emailEl || !phoneEl) return;
+
+        let shouldRequire;
+        if (isLost) {
+            // Lost: always require contact fields
+            shouldRequire = true;
+        } else {
+            // Found: require only when checkbox is NOT checked
+            shouldRequire = cbEl ? !cbEl.checked : true;
+        }
+
+        emailEl.required = shouldRequire;
+        phoneEl.required = shouldRequire;
+
+        // Update placeholder hint
+        if (!isLost && cbEl && cbEl.checked) {
+            emailEl.placeholder = 'Optional — item is at the office';
+            phoneEl.placeholder = 'Optional — item is at the office';
+        } else {
+            emailEl.placeholder = '';
+            phoneEl.placeholder = '';
+        }
+
+        // Show/hide the * asterisk on labels
+        reqStars.forEach(el => {
+            el.style.display = shouldRequire ? '' : 'none';
+        });
+    }
+
+    // ── Helper: toggle office checkbox visibility ─────────────────────────────
+    function toggleOfficeElements(prefix, typeValue) {
+        const isLost = typeValue === 'Lost';
+        const isPost = prefix === 'post';
+        const checkboxSection = document.getElementById(isPost ? 'post-checkbox-section' : 'edit-checkbox-section');
+        const checkboxDesc    = document.getElementById(isPost ? 'post-checkbox-desc'    : 'edit-checkbox-desc');
+        const hr              = document.getElementById(isPost ? 'post-office-hr'        : 'edit-office-hr');
+
+        [checkboxSection, checkboxDesc, hr].forEach(el => {
+            if (el) el.style.display = isLost ? 'none' : '';
+        });
+    }
+
     // ── Filter logic ──────────────────────────────────────────────────────────
     const filterBtns = document.querySelectorAll('.btn[data-filter]');
-    const cards = document.querySelectorAll('.item-card');
+    const cards      = document.querySelectorAll('.item-card');
     filterBtns.forEach(btn => {
         btn.addEventListener('click', function () {
             const filter = this.getAttribute('data-filter');
@@ -573,11 +630,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const postImgInput = document.getElementById('item_image');
     if (postImgInput) {
         postImgInput.addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            const preview = document.getElementById('image-preview');
+            const file        = e.target.files[0];
+            const preview     = document.getElementById('image-preview');
             const placeholder = document.getElementById('upload-placeholder');
             if (file) {
-                const reader = new FileReader();
+                const reader  = new FileReader();
                 reader.onload = ev => {
                     preview.src = ev.target.result;
                     preview.classList.remove('d-none');
@@ -588,11 +645,41 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // ── POST modal — radio change ─────────────────────────────────────────────
+    document.querySelectorAll('#postItemModal input[name="post_type"]').forEach(radio => {
+        radio.addEventListener('change', function () {
+            toggleOfficeElements('post', this.value);
+            updateContactRequired('post');
+        });
+    });
+
+    // ── POST modal — checkbox change ──────────────────────────────────────────
+    const postCb = document.getElementById('submitted_to_office');
+    if (postCb) {
+        postCb.addEventListener('change', function () {
+            updateContactRequired('post');
+        });
+    }
+
+    // ── POST modal — init on open ─────────────────────────────────────────────
+    const postModal = document.getElementById('postItemModal');
+    if (postModal) {
+        postModal.addEventListener('show.bs.modal', function () {
+            // Reset form state
+            if (postCb) postCb.checked = false;
+            const checked = document.querySelector('#postItemModal input[name="post_type"]:checked');
+            if (checked) {
+                toggleOfficeElements('post', checked.value);
+                updateContactRequired('post');
+            }
+        });
+    }
+
     // ── View Modal ────────────────────────────────────────────────────────────
     const viewModal = document.getElementById('viewItemModal');
     if (viewModal) {
         viewModal.addEventListener('show.bs.modal', function (event) {
-            const btn = event.relatedTarget;
+            const btn  = event.relatedTarget;
             const info = {
                 name:  btn.dataset.name,
                 loc:   btn.dataset.location,
@@ -616,7 +703,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('v-phone').textContent = info.phone;
 
             document.getElementById('v-avatar').src =
-                `https://ui-avatars.com/api/?name=${encodeURIComponent(btn.dataset.user)}&background=0b5a30&color=fff`;
+                'https://ui-avatars.com/api/?name=' + encodeURIComponent(btn.dataset.user) + '&background=0b5a30&color=fff';
 
             const statusBox  = document.getElementById('v-status-box');
             const statusText = document.getElementById('v-status-text');
@@ -626,27 +713,27 @@ document.addEventListener("DOMContentLoaded", function () {
                 typeBadge.textContent = 'Lost';
                 typeBadge.className = 'badge bg-danger position-absolute top-0 end-0 m-2 rounded-pill px-3';
                 statusBox.style.cssText = 'background-color:#EBCFCD;border-left:4px solid #5E0006;color:#5E0006;';
-                statusText.innerHTML = `
-                    <div class="fw-bold mb-1" style="font-size:18px;">Someone is looking for this item</div>
-                    <div class="fw-light">If you have found this item, please contact the owner using the information provided.</div>`;
+                statusText.innerHTML =
+                    '<div class="fw-bold mb-1" style="font-size:18px;">Someone is looking for this item</div>' +
+                    '<div class="fw-light">If you have found this item, please contact the owner using the information provided.</div>';
             } else {
                 typeBadge.textContent = 'Found';
                 typeBadge.className = 'badge bg-success position-absolute top-0 end-0 m-2 rounded-pill px-3';
                 const submitted = btn.dataset.submittedToOffice === 'true';
                 if (!submitted) {
                     statusBox.style.cssText = 'background-color:#fff3cd;border-left:4px solid #ffc107;color:#FFD100;';
-                    statusText.innerHTML = `
-                        <div class="fw-bold mb-1" style="color:#FFD100;font-size:18px;">Currently Held by Finder</div>
-                        <p class="fw-light mb-0" style="color:#343A40;">The person who found this item is currently holding it.</p>`;
+                    statusText.innerHTML =
+                        '<div class="fw-bold mb-1" style="color:#FFD100;font-size:18px;">Currently Held by Finder</div>' +
+                        '<p class="fw-light mb-0" style="color:#343A40;">The person who found this item is currently holding it.</p>';
                 } else {
                     statusBox.style.cssText = 'background-color:#D4E3DA;border-left:4px solid #0F6631;color:#0F6631;';
-                    statusText.innerHTML = `
-                        <div class="fw-bold mb-1" style="color:#0F6631;font-size:18px;">Surrendered to Lost &amp; Found Office</div>
-                        <p class="fw-light mb-2" style="color:#343A40;">This item has been turned over to the GNC Lost &amp; Found Management Office. Please visit the office during business hours to claim your item.</p>
-                        <div class="small" style="color:#343A40;">
-                            <strong>Office Hours:</strong> <span style="font-weight:300;">Monday - Saturday, 8:00 AM - 5:00 PM</span><br>
-                            <strong>Location:</strong> <span style="font-weight:300;">Main Building, Ground Floor</span>
-                        </div>`;
+                    statusText.innerHTML =
+                        '<div class="fw-bold mb-1" style="color:#0F6631;font-size:18px;">Surrendered to Lost &amp; Found Office</div>' +
+                        '<p class="fw-light mb-2" style="color:#343A40;">This item has been turned over to the GNC Lost &amp; Found Management Office. Please visit the office during business hours to claim your item.</p>' +
+                        '<div class="small" style="color:#343A40;">' +
+                            '<strong>Office Hours:</strong> <span style="font-weight:300;">Monday - Saturday, 8:00 AM - 5:00 PM</span><br>' +
+                            '<strong>Location:</strong> <span style="font-weight:300;">Main Building, Ground Floor</span>' +
+                        '</div>';
                 }
             }
         });
@@ -674,8 +761,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 type && type.toLowerCase() === 'found' ? 'editTypeFound' : 'editTypeLost'
             ).checked = true;
 
-            // Update checkbox visibility based on loaded type
             toggleOfficeElements('edit', type);
+            updateContactRequired('edit');
 
             const img         = btn.dataset.img;
             const previewImg  = document.getElementById('edit-image-preview');
@@ -690,14 +777,15 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
+        // Edit image preview
         const editImgInput = document.getElementById('edit_item_image');
         if (editImgInput) {
             editImgInput.addEventListener('change', function (e) {
-                const file = e.target.files[0];
+                const file        = e.target.files[0];
                 const preview     = document.getElementById('edit-image-preview');
                 const placeholder = document.getElementById('edit-upload-placeholder');
                 if (file) {
-                    const reader = new FileReader();
+                    const reader  = new FileReader();
                     reader.onload = ev => {
                         preview.src = ev.target.result;
                         preview.classList.remove('d-none');
@@ -709,43 +797,19 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // ── Checkbox visibility helper ────────────────────────────────────────────
-    // prefix = 'post' | 'edit'
-    function toggleOfficeElements(prefix, typeValue) {
-        const isLost = typeValue === 'Lost';
-        const checkboxSection = document.getElementById(prefix === 'post' ? 'post-checkbox-section' : 'edit-checkbox-section');
-        const checkboxDesc    = document.getElementById(prefix === 'post' ? 'post-checkbox-desc'    : 'edit-checkbox-desc');
-        const hr              = document.getElementById(prefix === 'post' ? 'post-office-hr'        : 'edit-office-hr');
-
-        [checkboxSection, checkboxDesc, hr].forEach(el => {
-            if (el) el.style.display = isLost ? 'none' : '';
-        });
-    }
-
-    // POST modal — hide on load because "Lost" is checked by default
-    const defaultPostType = document.querySelector('#postItemModal input[name="post_type"]:checked');
-    if (defaultPostType) toggleOfficeElements('post', defaultPostType.value);
-
-    // POST modal — update on change
-    document.querySelectorAll('#postItemModal input[name="post_type"]').forEach(radio => {
-        radio.addEventListener('change', function () {
-            toggleOfficeElements('post', this.value);
-        });
-    });
-
-    // EDIT modal — update on change
+    // ── EDIT modal — radio change ─────────────────────────────────────────────
     document.querySelectorAll('#editItemModal input[name="post_type"]').forEach(radio => {
         radio.addEventListener('change', function () {
             toggleOfficeElements('edit', this.value);
+            updateContactRequired('edit');
         });
     });
 
-    // Also hide when post modal is shown (reset state each open)
-    const postModal = document.getElementById('postItemModal');
-    if (postModal) {
-        postModal.addEventListener('show.bs.modal', function () {
-            const checked = document.querySelector('#postItemModal input[name="post_type"]:checked');
-            if (checked) toggleOfficeElements('post', checked.value);
+    // ── EDIT modal — checkbox change ──────────────────────────────────────────
+    const editCb = document.getElementById('edit_submitted_to_office');
+    if (editCb) {
+        editCb.addEventListener('change', function () {
+            updateContactRequired('edit');
         });
     }
 

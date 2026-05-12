@@ -11,8 +11,13 @@ if ($conn->connect_error) {
 
 require_once __DIR__ . '/includes/input.php';
 
-$search     = getGetString('q');
-$filterType = getAllowedEnum('type', ['all', 'lost', 'found'], 'all');
+// Fetch all categories for the filter dropdown
+$catResult  = $conn->query("SELECT id, category_name FROM categories ORDER BY id ASC");
+$categories = $catResult ? $catResult->fetch_all(MYSQLI_ASSOC) : [];
+
+$search         = getGetString('q');
+$filterType     = getAllowedEnum('type', ['all', 'lost', 'found'], 'all');
+$filterCategory = isset($_GET['category']) ? (int)$_GET['category'] : 0;
 
 $conditions = ["items.upload_status = 'approved'"];
 $params = [];
@@ -31,8 +36,13 @@ if ($filterType === 'lost') {
     $conditions[] = "items.post_type = 'Found'";
 }
 
-$whereClause = implode(" AND ", $conditions);
+if ($filterCategory > 0) {
+    $conditions[] = "items.category_id = ?";
+    $params[]     = $filterCategory;
+    $types        .= "i";
+}
 
+$whereClause = implode(" AND ", $conditions);
 $limit = "LIMIT 6";
 
 $sql = "SELECT items.*, categories.category_name,
@@ -52,9 +62,23 @@ $stmt->execute();
 $result = $stmt->get_result();
 $items  = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 
-// ✅ Count total approved items to know if "View All" button is needed
-$totalResult = $conn->query("SELECT COUNT(*) as cnt FROM items WHERE upload_status = 'approved'");
+// Count total approved items (respecting category filter)
+$totalSql = "SELECT COUNT(*) as cnt FROM items WHERE upload_status = 'approved'";
+if ($filterCategory > 0) $totalSql .= " AND category_id = $filterCategory";
+$totalResult = $conn->query($totalSql);
 $totalItems  = $totalResult ? (int)$totalResult->fetch_assoc()['cnt'] : 0;
+
+// Find active category name for display
+$activeCategoryName = '';
+foreach ($categories as $cat) {
+    if ((int)$cat['id'] === $filterCategory) {
+        $activeCategoryName = $cat['category_name'];
+        break;
+    }
+}
+
+// Determine if we should scroll to items section after load
+$shouldScrollToItems = ($search !== '' || $filterCategory > 0 || $filterType !== 'all');
 
 $conn->close();
 ?>
@@ -67,8 +91,151 @@ $conn->close();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="assets/css/index-style.css">
+    <style>
+        /* Loading Overlay */
+        #loadingOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(3px);
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+        #loadingOverlay.show {
+            display: flex;
+        }
+        .loading-spinner {
+            width: 52px;
+            height: 52px;
+            border: 5px solid #d4edda;
+            border-top-color: #0b4628;
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+        }
+        .loading-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #0b4628;
+            letter-spacing: 0.02em;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Filter dropdown */
+        .filter-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            z-index: 1050;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            min-width: 220px;
+            padding: 8px 0;
+            display: none;
+        }
+        .filter-dropdown.show {
+            display: block;
+        }
+        .filter-dropdown .filter-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 18px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #333;
+            transition: background 0.15s;
+            text-decoration: none;
+        }
+        .filter-dropdown .filter-item:hover {
+            background-color: #f0f8f4;
+            color: #0b4628;
+        }
+        .filter-dropdown .filter-item.active {
+            color: #0b4628;
+            font-weight: 600;
+        }
+        .filter-dropdown .filter-item .check-icon {
+            display: none;
+            color: #0b4628;
+        }
+        .filter-dropdown .filter-item.active .check-icon {
+            display: inline;
+        }
+        .filter-dropdown-divider {
+            border-top: 1px solid #f0f0f0;
+            margin: 4px 0;
+        }
+        .filter-btn {
+            border: 1.5px solid #0b4628;
+            color: #0b4628;
+            background: white;
+            font-weight: 600;
+            border-radius: 6px;
+            padding: 8px 18px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: background 0.15s, color 0.15s;
+            cursor: pointer;
+        }
+        .filter-btn:hover,
+        .filter-btn.active-filter {
+            background-color: #0b4628;
+            color: white;
+        }
+        .filter-btn .filter-badge {
+            background: #0b4628;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .filter-btn.active-filter .filter-badge {
+            background: white;
+            color: #0b4628;
+        }
+        .active-filter-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #e8f5ee;
+            border: 1px solid #0b4628;
+            color: #0b4628;
+            border-radius: 20px;
+            padding: 3px 12px;
+            font-size: 0.82rem;
+            font-weight: 500;
+        }
+        .active-filter-tag a {
+            color: #0b4628;
+            line-height: 1;
+            text-decoration: none;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-label">Loading items...</div>
+    </div>
+
     <!-- NAVBAR -->
     <nav class="navbar sticky-top navbar-expand-lg shadow-sm">
         <div class="container">
@@ -106,10 +273,10 @@ $conn->close();
                         Built for GNCians to help each other find <br class="d-none d-md-block">
                         lost items on campus.
                     </p>
-                <div class="d-flex flex-column flex-md-row gap-3 mt-4">
-                    <a href="auth/register.php" target="_blank" class="btn btn-light btn-lg px-4 py-3 fw-bold" style="color: #094624;">Report Lost Items</a>
-                    <a href="#items" class="btn btn-outline-light btn-lg px-4 py-3 fw-bold">Browse Found Items</a>
-                </div>
+                    <div class="d-flex flex-column flex-md-row gap-3 mt-4">
+                        <a href="auth/register.php" target="_blank" class="btn btn-light btn-lg px-4 py-3 fw-bold" style="color: #094624;">Report Lost Items</a>
+                        <a href="#items" class="btn btn-outline-light btn-lg px-4 py-3 fw-bold">Browse Found Items</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -178,8 +345,11 @@ $conn->close();
         <div class="container py-4">
             <h2 class="fw-bold display-6 mb-4">Lost & Found Items</h2>
 
-            <form method="GET" action="#items" class="mb-4">
+            <!-- Search + Filter -->
+            <!-- NOTE: action="" with no #items hash — scrolling is handled by JS after load -->
+            <form method="GET" action="" class="mb-3" id="searchForm">
                 <input type="hidden" name="type" value="<?= htmlspecialchars($filterType) ?>">
+                <input type="hidden" name="category" value="<?= $filterCategory ?>" id="categoryInput">
                 <div class="row g-2 align-items-center">
                     <div class="col">
                         <div class="input-group">
@@ -196,8 +366,58 @@ $conn->close();
                         <button class="btn px-4 py-2" type="submit"
                                 style="background-color:#0b4628; color:white; border:none;">Search</button>
                     </div>
+                    <!-- Filter Button -->
+                    <div class="col-auto position-relative">
+                        <button type="button"
+                                id="filterBtn"
+                                class="filter-btn <?= $filterCategory > 0 ? 'active-filter' : '' ?>">
+                            <i class="bi bi-funnel"></i>
+                            Filter
+                            <?php if ($filterCategory > 0): ?>
+                                <span class="filter-badge">1</span>
+                            <?php endif; ?>
+                        </button>
+
+                        <!-- Dropdown -->
+                        <div class="filter-dropdown" id="filterDropdown">
+                            <div style="padding: 8px 18px 6px; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; color:#888; font-weight:600;">
+                                Category
+                            </div>
+                            <!-- Use data-category-id instead of href with hash -->
+                            <a href="#"
+                               class="filter-item <?= $filterCategory === 0 ? 'active' : '' ?>"
+                               data-category-id="0"
+                               data-filter-link>
+                                All Categories
+                                <i class="bi bi-check2 check-icon"></i>
+                            </a>
+                            <div class="filter-dropdown-divider"></div>
+                            <?php foreach ($categories as $cat): ?>
+                                <?php $isActive = $filterCategory === (int)$cat['id']; ?>
+                                <a href="#"
+                                   class="filter-item <?= $isActive ? 'active' : '' ?>"
+                                   data-category-id="<?= $cat['id'] ?>"
+                                   data-filter-link>
+                                    <?= htmlspecialchars($cat['category_name']) ?>
+                                    <i class="bi bi-check2 check-icon"></i>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                 </div>
             </form>
+
+            <!-- Active filter tag -->
+            <?php if ($filterCategory > 0 && $activeCategoryName): ?>
+                <div class="mb-3 d-flex align-items-center gap-2">
+                    <span class="text-muted small">Filtered by:</span>
+                    <span class="active-filter-tag">
+                        <?= htmlspecialchars($activeCategoryName) ?>
+                        <!-- Remove filter: set category to 0 and submit -->
+                        <a href="#" data-category-id="0" data-filter-link title="Remove filter">&#x2715;</a>
+                    </span>
+                </div>
+            <?php endif; ?>
 
             <div class="row g-4">
                 <?php if (!empty($items)): ?>
@@ -273,11 +493,10 @@ $conn->close();
                 <?php endif; ?>
             </div>
 
-            <!-- ✅ "View All Items" — links to your separate page -->
+            <!-- "View All Items" button -->
             <?php if ($totalItems > 6): ?>
                 <div class="text-center mt-5">
-                    <!-- Change "view-all-items.php" to your actual filename -->
-                    <a href="view-all-items.php"
+                    <a href="view-all-items.php<?= $filterCategory > 0 ? '?category=' . $filterCategory : '' ?>"
                     class="btn btn-lg fw-semibold px-5 py-2"
                     style="background-color:#0b4628; color:white; border-radius:8px;">
                         View All Items
@@ -389,7 +608,59 @@ $conn->close();
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
+    // ── Loading overlay ──────────────────────────────────────────────
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    // ── Filter dropdown toggle ────────────────────────────────────────
+    const filterBtn      = document.getElementById('filterBtn');
+    const filterDropdown = document.getElementById('filterDropdown');
+
+    filterBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        filterDropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!filterDropdown.contains(e.target) && e.target !== filterBtn) {
+            filterDropdown.classList.remove('show');
+        }
+    });
+
+    // ── Filter links: save scroll position, then submit ───────────────
+    document.querySelectorAll('[data-filter-link]').forEach(function (link) {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            const categoryId = this.getAttribute('data-category-id');
+            document.getElementById('categoryInput').value = categoryId;
+            filterDropdown.classList.remove('show');
+            // Save current scroll position so we can restore it after reload
+            sessionStorage.setItem('restoreScrollY', window.scrollY);
+            loadingOverlay.classList.add('show');
+            document.getElementById('searchForm').submit();
+        });
+    });
+
+    // Save scroll position on search submit too
+    document.getElementById('searchForm').addEventListener('submit', function () {
+        sessionStorage.setItem('restoreScrollY', window.scrollY);
+        loadingOverlay.classList.add('show');
+    });
+
+    // ── After page load: restore scroll position exactly ─────────────
+    window.addEventListener('pageshow', function () {
+        loadingOverlay.classList.remove('show');
+
+        const savedY = sessionStorage.getItem('restoreScrollY');
+        if (savedY !== null) {
+            sessionStorage.removeItem('restoreScrollY');
+            // Restore exact scroll position — no scrolling effect at all
+            window.scrollTo({ top: parseInt(savedY, 10), behavior: 'instant' });
+        }
+    });
+
+    // ── Modal population ──────────────────────────────────────────────
     const viewModal = document.getElementById('viewItemModal');
     viewModal.addEventListener('show.bs.modal', function (event) {
         const btn = event.relatedTarget;
@@ -451,5 +722,6 @@ $conn->close();
         }
     });
     </script>
+
 </body>
 </html>

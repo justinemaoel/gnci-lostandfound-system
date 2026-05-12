@@ -15,16 +15,55 @@ $userRole = $_SESSION['role'] ?? 'student';
 $isAdmin       = strtolower(trim($_SESSION['email'] ?? '')) === 'admin.lostandfound@gmail.com';
 $dashboardLink = $isAdmin ? 'admin-dash.php' : 'user-dash.php';
 
+// Fetch all categories for filter dropdown
+$categories = $pdo->query("SELECT id, category_name FROM categories ORDER BY id ASC")->fetchAll(PDO::FETCH_ASSOC);
+
+// FILTERS
+$search         = trim($_GET['q'] ?? '');
+$filterType     = in_array($_GET['type'] ?? '', ['all', 'lost', 'found']) ? $_GET['type'] : 'all';
+$filterCategory = isset($_GET['category']) ? (int)$_GET['category'] : 0;
+
 // PAGINATION
 $perPage     = 12;
 $currentPage = max(1, (int)($_GET['page'] ?? 1));
 $offset      = ($currentPage - 1) * $perPage;
 
-// COUNT total approved items
-$totalItems = (int)$pdo->query("SELECT COUNT(*) FROM items WHERE upload_status = 'approved'")->fetchColumn();
+// BUILD WHERE clause
+$conditions = ["i.upload_status = 'approved'"];
+$params     = [];
+
+if ($search !== '') {
+    $conditions[] = "(i.item_name LIKE ? OR i.location_text LIKE ? OR i.description LIKE ?)";
+    $params[]     = "%$search%";
+    $params[]     = "%$search%";
+    $params[]     = "%$search%";
+}
+
+if ($filterType === 'lost') {
+    $conditions[] = "i.post_type = 'Lost'";
+} elseif ($filterType === 'found') {
+    $conditions[] = "i.post_type = 'Found'";
+}
+
+if ($filterCategory > 0) {
+    $conditions[] = "i.category_id = ?";
+    $params[]     = $filterCategory;
+}
+
+$where = implode(' AND ', $conditions);
+
+// COUNT total matching items
+$countStmt = $pdo->prepare("SELECT COUNT(*) FROM items i WHERE $where");
+$countStmt->execute($params);
+$totalItems = (int)$countStmt->fetchColumn();
 $totalPages = (int)ceil($totalItems / $perPage);
 
-// FETCH approved items — paginated, explicit columns (no SELECT *)
+// Clamp currentPage
+$currentPage = min($currentPage, max(1, $totalPages));
+$offset      = ($currentPage - 1) * $perPage;
+
+// FETCH paginated items
+$fetchParams = array_merge($params, [$perPage, $offset]);
 $stmt = $pdo->prepare("
     SELECT i.id, i.item_name, i.post_type, i.location_text, i.date_reported,
            i.description, i.item_img, i.submitted_to_office,
@@ -34,12 +73,32 @@ $stmt = $pdo->prepare("
     FROM items i
     LEFT JOIN categories c ON i.category_id = c.id
     LEFT JOIN users u      ON i.user_id = u.id
-    WHERE i.upload_status = 'approved'
+    WHERE $where
     ORDER BY i.created_at DESC
     LIMIT ? OFFSET ?
 ");
-$stmt->execute([$perPage, $offset]);
+$stmt->execute($fetchParams);
 $browse_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Active category name for tag display
+$activeCategoryName = '';
+foreach ($categories as $cat) {
+    if ((int)$cat['id'] === $filterCategory) {
+        $activeCategoryName = $cat['category_name'];
+        break;
+    }
+}
+
+// Helper: build query string preserving all current params except the ones we override
+function buildQuery(array $overrides = []): string {
+    $base = [
+        'q'        => trim($_GET['q'] ?? ''),
+        'type'     => $_GET['type'] ?? 'all',
+        'category' => $_GET['category'] ?? 0,
+        'page'     => 1,
+    ];
+    return http_build_query(array_merge($base, $overrides));
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -48,13 +107,107 @@ $browse_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Browse Items - GNC</title>
 
-    <!-- Preconnect to speed up DNS + TLS handshake for external origins -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://ui-avatars.com" crossorigin>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="assets/css/browse-item.css">
+    <style>
+        /* ── Filter dropdown ─────────────────────────────────────── */
+        .filter-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            z-index: 1050;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            min-width: 220px;
+            padding: 8px 0;
+            display: none;
+        }
+        .filter-dropdown.show { display: block; }
+
+        .filter-dropdown .filter-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 18px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #333;
+            transition: background 0.15s;
+            text-decoration: none;
+        }
+        .filter-dropdown .filter-item:hover { background-color: #f0f8f4; color: #0b4628; }
+        .filter-dropdown .filter-item.active { color: #0b4628; font-weight: 600; }
+        .filter-dropdown .filter-item .check-icon { display: none; color: #0b4628; }
+        .filter-dropdown .filter-item.active .check-icon { display: inline; }
+        .filter-dropdown-divider { border-top: 1px solid #f0f0f0; margin: 4px 0; }
+
+        .filter-btn {
+            border: 1.5px solid #0b4628;
+            color: #0b4628;
+            background: white;
+            font-weight: 600;
+            border-radius: 6px;
+            padding: 7px 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: background 0.15s, color 0.15s;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        .filter-btn:hover,
+        .filter-btn.active-filter { background-color: #0b4628; color: white; }
+        .filter-btn .filter-badge {
+            background: #0b4628; color: white;
+            border-radius: 50%; width: 18px; height: 18px;
+            font-size: 11px; display: inline-flex;
+            align-items: center; justify-content: center;
+        }
+        .filter-btn.active-filter .filter-badge { background: white; color: #0b4628; }
+
+        .active-filter-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #e8f5ee;
+            border: 1px solid #0b4628;
+            color: #0b4628;
+            border-radius: 20px;
+            padding: 3px 12px;
+            font-size: 0.82rem;
+            font-weight: 500;
+        }
+        .active-filter-tag a {
+            color: #0b4628; line-height: 1;
+            text-decoration: none; font-size: 1rem; cursor: pointer;
+        }
+
+        /* ── Type pills ──────────────────────────────────────────── */
+        .type-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1.5px solid #dee2e6;
+            background: white;
+            color: #555;
+            text-decoration: none;
+            transition: all 0.15s;
+        }
+        .type-pill:hover { border-color: #0b4628; color: #0b4628; }
+        .type-pill.active { background-color: #0b4628; color: white; border-color: #0b4628; }
+    </style>
 </head>
 <body class="bg-light">
 
@@ -79,7 +232,6 @@ $browse_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="fw-bold mb-0 lh-1"><?= htmlspecialchars($fullName) ?></div>
             <small class="text-uppercase opacity-75" style="font-size: 10px;"><?= htmlspecialchars($userRole) ?></small>
         </div>
-        <!-- Avatar deferred — set via JS after page renders -->
         <img id="nav-avatar"
              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='35' height='35'%3E%3Crect width='35' height='35' rx='50' fill='%230b5a30'/%3E%3C/svg%3E"
              data-name="<?= urlencode($fullName) ?>"
@@ -163,13 +315,113 @@ $browse_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         <!-- MAIN CONTENT -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4 min-vh-100">
+
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3 class="fw-bold mb-0">Browse All Items</h3>
                 <small class="text-muted">
-                    Showing <?= count($browse_items) ?> of <?= $totalItems ?> items
+                    Showing <?= count($browse_items) ?> of <?= $totalItems ?> item<?= $totalItems !== 1 ? 's' : '' ?>
                 </small>
             </div>
 
+            <!-- ── Search + Filter bar ──────────────────────────────── -->
+            <form method="GET" action="" id="searchForm" class="mb-3">
+                <input type="hidden" name="type"     value="<?= htmlspecialchars($filterType) ?>" id="typeInput">
+                <input type="hidden" name="category" value="<?= $filterCategory ?>"               id="categoryInput">
+                <input type="hidden" name="page"     value="1">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-search text-secondary"></i>
+                            </span>
+                            <input type="text" name="q"
+                                   class="form-control border-start-0 py-2"
+                                   placeholder="Search by item name, location, or description…"
+                                   value="<?= htmlspecialchars($search) ?>">
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn fw-semibold px-4 py-2"
+                                type="submit"
+                                style="background-color:#0b4628; color:white; border:none;">
+                            Search
+                        </button>
+                    </div>
+                    <!-- Category filter button -->
+                    <div class="col-auto position-relative">
+                        <button type="button"
+                                id="filterBtn"
+                                class="filter-btn <?= $filterCategory > 0 ? 'active-filter' : '' ?>">
+                            <i class="bi bi-funnel"></i>
+                            Filter
+                            <?php if ($filterCategory > 0): ?>
+                                <span class="filter-badge">1</span>
+                            <?php endif; ?>
+                        </button>
+
+                        <div class="filter-dropdown" id="filterDropdown">
+                            <div style="padding:8px 18px 6px; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; color:#888; font-weight:600;">
+                                Category
+                            </div>
+                            <a href="#" class="filter-item <?= $filterCategory === 0 ? 'active' : '' ?>"
+                               data-category-id="0" data-filter-link>
+                                All Categories
+                                <i class="bi bi-check2 check-icon"></i>
+                            </a>
+                            <div class="filter-dropdown-divider"></div>
+                            <?php foreach ($categories as $cat): ?>
+                                <a href="#"
+                                   class="filter-item <?= $filterCategory === (int)$cat['id'] ? 'active' : '' ?>"
+                                   data-category-id="<?= $cat['id'] ?>"
+                                   data-filter-link>
+                                    <?= htmlspecialchars($cat['category_name']) ?>
+                                    <i class="bi bi-check2 check-icon"></i>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Active filters row -->
+            <?php $hasActiveFilters = $filterCategory > 0 || $search !== '' || $filterType !== 'all'; ?>
+            <?php if ($hasActiveFilters): ?>
+                <div class="d-flex align-items-center gap-2 flex-wrap mb-3">
+                    <?php if ($filterCategory > 0 && $activeCategoryName): ?>
+                        <span class="text-muted small">Filtered by:</span>
+                        <span class="active-filter-tag">
+                            <?= htmlspecialchars($activeCategoryName) ?>
+                            <a href="#" data-category-id="0" data-filter-link title="Remove">&#x2715;</a>
+                        </span>
+                    <?php endif; ?>
+                    <?php if ($search !== ''): ?>
+                        <span class="active-filter-tag">
+                            "<?= htmlspecialchars($search) ?>"
+                            <a href="?<?= buildQuery(['q' => '']) ?>" title="Clear search">&#x2715;</a>
+                        </span>
+                    <?php endif; ?>
+                    <?php if ($hasActiveFilters): ?>
+                        <a href="browse-item.php" class="text-muted small ms-1" style="text-decoration:underline;">
+                            Clear all
+                        </a>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
+            <!-- ── Lost / Found / All type pills ───────────────────── -->
+            <div class="d-flex gap-2 flex-wrap mb-4">
+                <a href="#" class="type-pill <?= $filterType === 'all'   ? 'active' : '' ?>" data-type="all"   data-type-link>
+                    <i class="bi bi-grid"></i> All Items
+                </a>
+                <a href="#" class="type-pill <?= $filterType === 'found' ? 'active' : '' ?>" data-type="found" data-type-link>
+                    <i class="bi bi-check-circle"></i> Found Items
+                </a>
+                <a href="#" class="type-pill <?= $filterType === 'lost'  ? 'active' : '' ?>" data-type="lost"  data-type-link>
+                    <i class="bi bi-exclamation-circle"></i> Lost Items
+                </a>
+            </div>
+
+            <!-- ── Item grid ────────────────────────────────────────── -->
             <div class="row g-4">
                 <?php if (!empty($browse_items)): ?>
                     <?php foreach ($browse_items as $item):
@@ -181,7 +433,6 @@ $browse_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     ?>
                         <div class="col-md-6 col-xl-4">
                             <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
-                                <!-- lazy loading on card images prevents blocking render -->
                                 <img loading="lazy"
                                      src="<?= $img ?>"
                                      class="card-img-top object-fit-cover"
@@ -197,6 +448,10 @@ $browse_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <?= ucfirst($item['post_type']) ?>
                                         </span>
                                     </div>
+                                    <p class="text-muted small mb-1">
+                                        <i class="bi bi-tag me-1 text-success"></i>
+                                        <?= htmlspecialchars($item['category_name'] ?? 'General') ?>
+                                    </p>
                                     <p class="text-muted small mb-3">
                                         <i class="bi bi-person me-1 text-success"></i>
                                         <strong>Posted by:</strong> <?= $posterName ?><br>
@@ -227,7 +482,12 @@ $browse_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php else: ?>
                     <div class="col-12 text-center py-5">
                         <i class="bi bi-inbox fs-1 text-muted"></i>
-                        <p class="text-muted mt-2">No items available to browse.</p>
+                        <p class="text-muted mt-2">
+                            <?= $search !== '' ? 'No items found matching "' . htmlspecialchars($search) . '".' : 'No items available.' ?>
+                        </p>
+                        <?php if ($hasActiveFilters): ?>
+                            <a href="browse-item.php" class="btn btn-outline-secondary btn-sm mt-2">Clear filters</a>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
             </div>
@@ -238,7 +498,7 @@ $browse_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <ul class="pagination justify-content-center">
                         <?php if ($currentPage > 1): ?>
                             <li class="page-item">
-                                <a class="page-link" href="?page=<?= $currentPage - 1 ?>">
+                                <a class="page-link" href="?<?= buildQuery(['page' => $currentPage - 1]) ?>">
                                     <i class="bi bi-chevron-left"></i>
                                 </a>
                             </li>
@@ -246,13 +506,13 @@ $browse_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                         <?php for ($p = 1; $p <= $totalPages; $p++): ?>
                             <li class="page-item <?= $p === $currentPage ? 'active' : '' ?>">
-                                <a class="page-link" href="?page=<?= $p ?>"><?= $p ?></a>
+                                <a class="page-link" href="?<?= buildQuery(['page' => $p]) ?>"><?= $p ?></a>
                             </li>
                         <?php endfor; ?>
 
                         <?php if ($currentPage < $totalPages): ?>
                             <li class="page-item">
-                                <a class="page-link" href="?page=<?= $currentPage + 1 ?>">
+                                <a class="page-link" href="?<?= buildQuery(['page' => $currentPage + 1]) ?>">
                                     <i class="bi bi-chevron-right"></i>
                                 </a>
                             </li>
@@ -265,7 +525,6 @@ $browse_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 </div>
 
-
 <!-- VIEW DETAILS MODAL -->
 <div class="modal fade" id="viewItemModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -276,7 +535,6 @@ $browse_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
             <div class="modal-body">
                 <div class="row g-4">
-
                     <!-- LEFT COLUMN -->
                     <div class="col-md-5">
                         <div class="position-relative mb-3">
@@ -344,62 +602,99 @@ $browse_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div id="v-status-text" class="small"></div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-
-<!-- Bootstrap JS deferred — does not block page render -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ── Lazy-load navbar avatar after page is ready ──────────────────────
+    // ── Lazy-load navbar avatar ──────────────────────────────────────
     const navAvatar = document.getElementById('nav-avatar');
     if (navAvatar) {
-        const name = navAvatar.dataset.name || '';
-        navAvatar.src = 'https://ui-avatars.com/api/?name=' + name + '&background=0b5a30&color=fff';
+        navAvatar.src = 'https://ui-avatars.com/api/?name=' + navAvatar.dataset.name + '&background=0b5a30&color=fff';
     }
 
-    // ── View Details Modal ───────────────────────────────────────────────
-    const modalEl = document.getElementById('viewItemModal');
-    if (!modalEl) return;
+    // ── Filter dropdown toggle ───────────────────────────────────────
+    const filterBtn      = document.getElementById('filterBtn');
+    const filterDropdown = document.getElementById('filterDropdown');
 
+    filterBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        filterDropdown.classList.toggle('show');
+    });
+    document.addEventListener('click', function (e) {
+        if (!filterDropdown.contains(e.target) && e.target !== filterBtn) {
+            filterDropdown.classList.remove('show');
+        }
+    });
+
+    // ── Category filter links ────────────────────────────────────────
+    document.querySelectorAll('[data-filter-link]').forEach(function (link) {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.getElementById('categoryInput').value = this.getAttribute('data-category-id');
+            filterDropdown.classList.remove('show');
+            sessionStorage.setItem('restoreScrollY', window.scrollY);
+            document.getElementById('searchForm').submit();
+        });
+    });
+
+    // ── Lost/Found/All type pills ────────────────────────────────────
+    document.querySelectorAll('[data-type-link]').forEach(function (link) {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.getElementById('typeInput').value = this.getAttribute('data-type');
+            sessionStorage.setItem('restoreScrollY', window.scrollY);
+            document.getElementById('searchForm').submit();
+        });
+    });
+
+    // ── Search submit ────────────────────────────────────────────────
+    document.getElementById('searchForm').addEventListener('submit', function () {
+        sessionStorage.setItem('restoreScrollY', window.scrollY);
+    });
+
+    // ── Restore scroll position after reload ─────────────────────────
+    const savedY = sessionStorage.getItem('restoreScrollY');
+    if (savedY !== null) {
+        sessionStorage.removeItem('restoreScrollY');
+        window.scrollTo({ top: parseInt(savedY, 10), behavior: 'instant' });
+    }
+
+    // ── View Details Modal ───────────────────────────────────────────
     const STATUS_CONFIG = {
         lost: {
             label:  'Lost',
             badge:  'badge bg-danger position-absolute top-0 end-0 m-2 rounded-pill px-3',
-            bg:     '#EBCFCD',
-            border: '4px solid #5E0006',
-            icon:   'bi bi-exclamation-circle-fill fs-5',
-            color:  '#5E0006',
+            bg:     '#EBCFCD', border: '4px solid #5E0006',
+            icon:   'bi bi-exclamation-circle-fill fs-5', color: '#5E0006',
             title:  'Someone is looking for this item',
             body:   'If you have found this item, please contact the owner using the information provided.',
         },
         foundHeld: {
             label:  'Found',
             badge:  'badge bg-success position-absolute top-0 end-0 m-2 rounded-pill px-3',
-            bg:     '#fff3cd',
-            border: '4px solid #ffc107',
-            icon:   'bi bi-exclamation-circle-fill fs-5',
-            color:  '#856404',
+            bg:     '#fff3cd', border: '4px solid #ffc107',
+            icon:   'bi bi-exclamation-circle-fill fs-5', color: '#856404',
             title:  'Currently Held by Finder',
             body:   'The person who found this item is currently holding it. You can contact them directly using the information below.',
         },
         foundOffice: {
             label:  'Found',
             badge:  'badge bg-success position-absolute top-0 end-0 m-2 rounded-pill px-3',
-            bg:     '#D4E3DA',
-            border: '4px solid #0F6631',
-            icon:   'bi bi-info-circle-fill fs-5',
-            color:  '#0F6631',
+            bg:     '#D4E3DA', border: '4px solid #0F6631',
+            icon:   'bi bi-info-circle-fill fs-5', color: '#0F6631',
             title:  'Surrendered to Lost &amp; Found Office',
-            body:   'This item has been turned over to the GNC Lost &amp; Found Management Office. Please visit the office during business hours to claim your item.<br><br><strong style="font-weight: bold;">Office Hours:</strong> Monday - Saturday, 8:00 AM - 5:00 PM<br><strong style="font-weight: bold;">Location:</strong> Main Building, Ground Floor',
+            body:   'This item has been turned over to the GNC Lost &amp; Found Management Office. Please visit the office during business hours to claim your item.<br><br><strong>Office Hours:</strong> Monday - Saturday, 8:00 AM - 5:00 PM<br><strong>Location:</strong> Main Building, Ground Floor',
         },
     };
+
+    const modalEl = document.getElementById('viewItemModal');
+    if (!modalEl) return;
 
     modalEl.addEventListener('show.bs.modal', function (event) {
         const btn = event.relatedTarget;
@@ -409,7 +704,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const isLost            = (get('data-type') || '').toLowerCase() === 'lost';
         const submittedToOffice = get('data-submitted-to-office') === 'true';
-        const cfg               = isLost            ? STATUS_CONFIG.lost
+        const cfg               = isLost ? STATUS_CONFIG.lost
                                 : submittedToOffice ? STATUS_CONFIG.foundOffice
                                 : STATUS_CONFIG.foundHeld;
 
