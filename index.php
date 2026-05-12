@@ -11,8 +11,22 @@ if ($conn->connect_error) {
 
 require_once __DIR__ . '/includes/input.php';
 
-$search     = getGetString('q');
-$filterType = getAllowedEnum('type', ['all', 'lost', 'found'], 'all');
+$search       = getGetString('q');
+$filterType   = getAllowedEnum('type', ['all', 'lost', 'found'], 'all');
+$filterCatId  = getGetInt('category', 0);
+
+// Load categories for the dropdown
+$categories = [];
+$catResult  = $conn->query("SELECT id, category_name FROM categories ORDER BY category_name ASC");
+if ($catResult) {
+    $categories = $catResult->fetch_all(MYSQLI_ASSOC);
+}
+
+// Validate the submitted category against the loaded list
+$validCatIds = array_map(fn($c) => (int)$c['id'], $categories);
+if ($filterCatId !== 0 && !in_array($filterCatId, $validCatIds, true)) {
+    $filterCatId = 0;
+}
 
 $conditions = ["items.upload_status = 'approved'"];
 $params = [];
@@ -21,8 +35,10 @@ $types  = "";
 if ($search !== '') {
     $conditions[] = "(items.item_name LIKE ? OR items.location_text LIKE ? OR items.description LIKE ?)";
     $searchTerm   = "%$search%";
-    $params       = [$searchTerm, $searchTerm, $searchTerm];
-    $types        = "sss";
+    $params[]     = $searchTerm;
+    $params[]     = $searchTerm;
+    $params[]     = $searchTerm;
+    $types       .= "sss";
 }
 
 if ($filterType === 'lost') {
@@ -30,6 +46,14 @@ if ($filterType === 'lost') {
 } elseif ($filterType === 'found') {
     $conditions[] = "items.post_type = 'Found'";
 }
+
+if ($filterCatId > 0) {
+    $conditions[] = "items.category_id = ?";
+    $params[]     = $filterCatId;
+    $types       .= "i";
+}
+
+$hasActiveFilters = ($search !== '' || $filterType !== 'all' || $filterCatId > 0);
 
 $whereClause = implode(" AND ", $conditions);
 
@@ -181,7 +205,7 @@ $conn->close();
             <form method="GET" action="#items" class="mb-4">
                 <input type="hidden" name="type" value="<?= htmlspecialchars($filterType) ?>">
                 <div class="row g-2 align-items-center">
-                    <div class="col">
+                    <div class="col-12 col-md">
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0">
                                 <i class="bi bi-search text-secondary"></i>
@@ -192,10 +216,29 @@ $conn->close();
                                 value="<?= htmlspecialchars($search) ?>">
                         </div>
                     </div>
-                    <div class="col-auto">
-                        <button class="btn px-4 py-2" type="submit"
+                    <div class="col-12 col-md-auto">
+                        <select name="category" class="form-select bg-light py-2">
+                            <option value="0">All Categories</option>
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?= (int)$cat['id'] ?>"
+                                    <?= $filterCatId === (int)$cat['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($cat['category_name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-auto">
+                        <button class="btn px-4 py-2 w-100" type="submit"
                                 style="background-color:#0b4628; color:white; border:none;">Search</button>
                     </div>
+                    <?php if ($hasActiveFilters): ?>
+                        <div class="col-12 col-md-auto">
+                            <a href="index.php#items" class="btn btn-link text-decoration-none p-0 px-md-2"
+                               style="color:#0b4628;">
+                                <i class="bi bi-x-circle me-1"></i>Clear
+                            </a>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </form>
 
@@ -263,8 +306,8 @@ $conn->close();
                 <?php else: ?>
                     <div class="col-12 text-center py-5">
                         <p class="text-secondary">
-                            <?php if ($search !== ''): ?>
-                                No items found matching "<strong><?= htmlspecialchars($search) ?></strong>".
+                            <?php if ($hasActiveFilters): ?>
+                                No items match your search or filters. Try clearing them and searching again.
                             <?php else: ?>
                                 No items found.
                             <?php endif; ?>
@@ -275,9 +318,16 @@ $conn->close();
 
             <!-- ✅ "View All Items" — links to your separate page -->
             <?php if ($totalItems > 6): ?>
+                <?php
+                    $viewAllQuery = http_build_query(array_filter([
+                        'q'        => $search,
+                        'type'     => $filterType !== 'all' ? $filterType : null,
+                        'category' => $filterCatId > 0 ? $filterCatId : null,
+                    ], fn($v) => $v !== null && $v !== ''));
+                    $viewAllUrl = 'view-all-items.php' . ($viewAllQuery ? '?' . $viewAllQuery : '');
+                ?>
                 <div class="text-center mt-5">
-                    <!-- Change "view-all-items.php" to your actual filename -->
-                    <a href="view-all-items.php"
+                    <a href="<?= htmlspecialchars($viewAllUrl) ?>"
                     class="btn btn-lg fw-semibold px-5 py-2"
                     style="background-color:#0b4628; color:white; border-radius:8px;">
                         View All Items
