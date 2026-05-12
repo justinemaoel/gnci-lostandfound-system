@@ -105,7 +105,7 @@ function buildQuery(array $overrides = []): string {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Browse Items - GNC</title>
+    <title>Browse Items</title>
 
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://ui-avatars.com" crossorigin>
@@ -113,6 +113,8 @@ function buildQuery(array $overrides = []): string {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="assets/css/browse-item.css">
+    <link rel="icon" type="image/svg+xml" href="assets/images/GNC Logo.svg">
+
     <style>
         /* ── Filter dropdown ─────────────────────────────────────── */
         .filter-dropdown {

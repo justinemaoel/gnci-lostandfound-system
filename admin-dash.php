@@ -95,12 +95,14 @@ $categories = $pdo->query("SELECT id, category_name FROM categories ORDER BY cat
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Posts - GNC</title>
+    <title>Admin Dashboard</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://ui-avatars.com" crossorigin>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="assets/css/admin-style.css">
+    <link rel="icon" type="image/svg+xml" href="assets/images/GNC Logo.svg">
+
 </head>
 <body class="bg-light">
 
